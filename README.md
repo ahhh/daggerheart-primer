@@ -9,6 +9,21 @@ An unofficial, non-commercial primer and study repository for **Daggerheart™**
 
 ---
 
+## ⚔ Heartforge — Character Creator (this repo's app)
+
+This repo includes **Heartforge**, a free single-file character builder compatible with Daggerheart™, built from the official SRD (see `official_content/`). It lives in [`index.html`](index.html) and is designed to be hosted on GitHub Pages from the `gh-pages` branch.
+
+- **Guided 9-step builder** — class & subclass, heritage (including mixed ancestry), the +2/+1/+1/+0/+0/−1 trait array, tier-1 weapons & armor, experiences, level-1 domain cards, connections, and a validation review.
+- **Live character sheet** — clickable HP/Stress/Hope/Armor trackers, derived Evasion/thresholds/Proficiency, gold, features, and notes.
+- **Duality Dice roller** — 2d12 Hope/Fear with advantage/disadvantage, Experience spends, and automatic Hope/Stress bookkeeping; weapon damage rolls too.
+- **Local-first** — characters autosave to your browser's localStorage; JSON export/import for backups; print-friendly sheet; light/dark themes. No accounts, no server, no tracking.
+
+To run it locally, just open `index.html` in a browser. To publish: enable GitHub Pages on the `gh-pages` branch (Settings → Pages → Deploy from branch → `gh-pages`, root).
+
+Heartforge bundles rules text from the *Daggerheart SRD 1.0* © Critical Role, LLC under the [DPCGL](https://darringtonpress.com/license/); it is unofficial and not endorsed by Darrington Press.
+
+---
+
 ## What Is Daggerheart?
 
 Daggerheart is a fiction-first, heroic fantasy TTRPG built around collaborative storytelling. Where many fantasy games emphasize tactical grids and rigid turn order, Daggerheart emphasizes narrative momentum, shared worldbuilding, and an emotional engine baked directly into the dice: **Hope and Fear**.

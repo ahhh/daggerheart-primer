@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Heartforge — a free, unofficial character builder compatible with Daggerheart™. Characters are stored locally in your browser.">
+<title>Heartforge Character Builder — compatible with Daggerheart™</title>
+<style>
+:root{
+  --bg:#151217; --panel:#201c24; --panel2:#282230; --ink:#eae4da; --ink-dim:#a89f92;
+  --line:#3a3242; --accent:#d4a94e; --accent-ink:#1c1408; --hope:#e8c064; --fear:#7d6cd9;
+  --good:#7dc98f; --warn:#e0a458; --bad:#e07070; --chip:#332b3d;
+  --radius:10px; --shadow:0 2px 10px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#f3eee6; --panel:#fffdf8; --panel2:#efe8dc; --ink:#2b2620; --ink-dim:#6f6659;
+  --line:#d8cfc0; --accent:#8a6420; --accent-ink:#fff8ea; --hope:#a97c1b; --fear:#5b4bc4;
+  --good:#2e7d44; --warn:#a3661a; --bad:#b03d3d; --chip:#e7dfd1;
+  --shadow:0 2px 8px rgba(60,45,20,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;line-height:1.25;margin:0 0 .5em}
+h1{font-size:1.35rem} h2{font-size:1.2rem} h3{font-size:1.05rem} h4{font-size:.95rem;margin-bottom:.35em}
+a{color:var(--accent)}
+p{margin:.4em 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;padding:.45em .9em}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.small{padding:.2em .6em;font-size:.85em}
+button.danger{color:var(--bad);border-color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=number],select,textarea{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.4em .6em;max-width:100%}
+input[type=text]:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+textarea{width:100%;min-height:70px;resize:vertical}
+label{display:block;font-size:.85em;color:var(--ink-dim);margin-bottom:.15em}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+header.app{position:sticky;top:0;z-index:40;display:flex;flex-wrap:wrap;gap:.6em;align-items:center;padding:.55em .9em;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+header.app .logo{display:flex;align-items:baseline;gap:.5em}
+header.app .logo b{font-family:Georgia,serif;font-size:1.15rem;color:var(--accent);letter-spacing:.02em}
+header.app .logo span{font-size:.72rem;color:var(--ink-dim)}
+header.app .spacer{flex:1}
+nav.tabs{display:flex;flex-wrap:wrap;gap:.25em}
+nav.tabs button{border:none;background:transparent;padding:.45em .8em;border-radius:8px;color:var(--ink-dim)}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected=true]{background:var(--panel2);color:var(--accent);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:1em .9em 5em}
+.cols{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:1em;align-items:start}
+@media(max-width:920px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:.9em 1em;margin-bottom:1em;box-shadow:var(--shadow)}
+.panel.tight{padding:.6em .75em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em}
+@media(max-width:640px){.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:.5em;align-items:center}
+.muted{color:var(--ink-dim)}
+.small{font-size:.85em}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:.08em .65em;font-size:.78em;color:var(--ink);white-space:nowrap}
+.chip.acc{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.badge-ok{color:var(--good)} .badge-warn{color:var(--warn)} .badge-err{color:var(--bad)}
+hr{border:none;border-top:1px solid var(--line);margin:.8em 0}
+/* selectable option cards */
+.optgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.6em}
+.opt{position:relative;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel2);padding:.6em .7em;cursor:pointer;transition:border-color .12s}
+.opt:hover{border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.opt h4{margin:0 0 .2em;color:var(--accent)}
+.opt .small{margin:0}
+.opt .tick{position:absolute;top:.45em;right:.6em;color:var(--accent);font-weight:700;display:none}
+.opt.sel .tick{display:block}
+/* wizard steps */
+.steps{display:flex;flex-wrap:wrap;gap:.3em;margin-bottom:.9em}
+.steps button{font-size:.8em;padding:.28em .6em;border-radius:999px}
+.steps button.cur{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.steps button.done{border-color:var(--good);color:var(--good)}
+.steps button.err{border-color:var(--bad);color:var(--bad)}
+/* trackers */
+.pips{display:flex;flex-wrap:wrap;gap:.3em}
+.pip{width:1.5em;height:1.5em;border:2px solid var(--line);border-radius:6px;background:transparent;padding:0}
+.pip.on{background:var(--accent);border-color:var(--accent)}
+.pip.hp.on{background:var(--bad);border-color:var(--bad)}
+.pip.stress.on{background:var(--fear);border-color:var(--fear)}
+.pip.hope.on{background:var(--hope);border-color:var(--hope)}
+.pip.extra{border-style:dashed}
+.trk{margin-bottom:.7em}
+.trk .lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:.8em;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25em}
+.statbox{display:flex;flex-direction:column;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);padding:.45em .3em}
+.statbox b{font-size:1.5em;line-height:1.1}
+.statbox span{font-size:.68em;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:.5em;margin-bottom:.8em}
+.traitgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.5em}
+.traitgrid .statbox b{font-size:1.35em}
+/* feature cards on sheet */
+.feat{border-left:3px solid var(--accent);padding:.35em .6em;background:var(--panel2);border-radius:0 8px 8px 0;margin-bottom:.5em}
+.feat b{color:var(--accent)}
+.feat .small{margin:.15em 0 0}
+.dcard{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel2);padding:.55em .7em;margin-bottom:.5em}
+.dcard .top{display:flex;gap:.5em;align-items:baseline;flex-wrap:wrap}
+.dcard .top b{color:var(--accent)}
+/* dice roller */
+.dice-result{display:flex;gap:.8em;align-items:center;flex-wrap:wrap;margin-top:.6em}
+.die{display:flex;flex-direction:column;align-items:center;border-radius:12px;padding:.4em .8em;min-width:3.2em;border:2px solid}
+.die b{font-size:1.6em;line-height:1.1}
+.die span{font-size:.65em;text-transform:uppercase;letter-spacing:.06em}
+.die.hope{border-color:var(--hope);color:var(--hope)}
+.die.fear{border-color:var(--fear);color:var(--fear)}
+.roll-verdict{font-family:Georgia,serif;font-size:1.15em}
+.roll-verdict.hope{color:var(--hope)} .roll-verdict.fear{color:var(--fear)} .roll-verdict.crit{color:var(--good)}
+.log{max-height:180px;overflow-y:auto;font-size:.85em;border-top:1px solid var(--line);margin-top:.6em;padding-top:.4em}
+table{border-collapse:collapse;width:100%;font-size:.9em}
+th,td{text-align:left;padding:.3em .5em;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--ink-dim);font-weight:600;font-size:.85em}
+.tablewrap{overflow-x:auto}
+.validation li{margin:.2em 0}
+details{margin:.4em 0}
+summary{cursor:pointer;color:var(--accent)}
+footer.app{max-width:1200px;margin:2em auto;padding:0 .9em 2em;font-size:.78em;color:var(--ink-dim)}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);max-width:560px;width:92vw}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.toast{position:fixed;bottom:1em;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:.5em 1.1em;border-radius:999px;font-weight:600;z-index:99;box-shadow:var(--shadow);opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* print */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--panel2:#fff;--ink:#111;--ink-dim:#555;--line:#999;--accent:#333;--accent-ink:#fff;--hope:#333;--fear:#333;--chip:#eee;--shadow:none}
+  header.app,nav.tabs,.no-print,footer.app .links,button{display:none!important}
+  body{font-size:12px}
+  main{max-width:none;padding:0}
+  .cols{grid-template-columns:1fr 1fr;gap:.6em}
+  .panel{break-inside:avoid;box-shadow:none;margin-bottom:.6em}
+  .pip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:2em;text-align:center">Heartforge requires JavaScript — it runs entirely in your browser and stores characters locally.</p></noscript>
+<header class="app" role="banner">
+  <div class="logo"><b>⚔ Heartforge</b><span>character builder · compatible with Daggerheart™ · unofficial</span></div>
+  <div class="spacer"></div>
+  <div class="row no-print">
+    <select id="charSelect" aria-label="Current character"></select>
+    <button id="btnNewChar" class="small" title="New character">+ New</button>
+    <button id="btnTheme" class="small" title="Toggle light/dark theme" aria-label="Toggle theme">◐</button>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Sections"></nav>
+</header>
+<main id="app"></main>
+<footer class="app">
+  <p><b>Heartforge</b> is an independent fan-made tool for learning purposes. It is not published, endorsed, or specifically approved by Darrington Press or Critical Role.</p>
+  <p>This tool includes materials from the <em>Daggerheart System Reference Document 1.0</em>, © Critical Role, LLC, used under the terms of the <a href="https://darringtonpress.com/license/" target="_blank" rel="noopener">Darrington Press Community Gaming License (DPCGL)</a>. Daggerheart and all related marks are trademarks of Critical Role, LLC. More information: <a href="https://www.daggerheart.com" target="_blank" rel="noopener">daggerheart.com</a>.</p>
+  <p class="links">Characters are stored only in this browser (localStorage) — export JSON backups regularly. No accounts, no tracking, no server.</p>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+// ===== SRD DATA — Part 1: meta, classes, subclasses =====
+// Game content from the Daggerheart System Reference Document 1.0,
+// © Critical Role, LLC, used under the Darrington Press Community Gaming License (DPCGL).
+const SRD = {};
+
+SRD.meta = {
+  traitArray: [2, 1, 1, 0, 0, -1],
+  startingHope: 2,
+  stressSlots: 6,
+  maxHope: 6,
+  loadoutMax: 5,
+  startingProficiency: 1,
+  startingGold: { handfuls: 1 },
+  baseInventory: "A torch, 50 feet of rope, basic supplies, and a handful of gold",
+  potionChoice: ["Minor Health Potion (clear 1d4 Hit Points)", "Minor Stamina Potion (clear 1d4 Stress)"],
+  traits: [
+    { id: "agility", name: "Agility", verbs: "Sprint, Leap, Maneuver", blurb: "A high Agility means you're fast on your feet, nimble on difficult terrain, and quick to react to danger." },
+    { id: "strength", name: "Strength", verbs: "Lift, Smash, Grapple", blurb: "A high Strength means you're better at feats that test your physical prowess and stamina." },
+    { id: "finesse", name: "Finesse", verbs: "Control, Hide, Tinker", blurb: "A high Finesse means you're skilled at tasks that require accuracy, stealth, or the utmost control." },
+    { id: "instinct", name: "Instinct", verbs: "Perceive, Sense, Navigate", blurb: "A high Instinct means you have a keen sense of your surroundings and a natural intuition." },
+    { id: "presence", name: "Presence", verbs: "Charm, Perform, Deceive", blurb: "A high Presence means you have a strong force of personality and a facility for social situations." },
+    { id: "knowledge", name: "Knowledge", verbs: "Recall, Analyze, Comprehend", blurb: "A high Knowledge means you know information others don't and understand how to apply your mind through deduction and inference." }
+  ],
+  exampleExperiences: {
+    "Backgrounds": ["Assassin", "Blacksmith", "Bodyguard", "Bounty Hunter", "Chef to the Royal Family", "Circus Performer", "Con Artist", "Fallen Monarch", "Field Medic", "High Priestess", "Merchant", "Noble", "Pirate", "Politician", "Runaway", "Scholar", "Sellsword", "Soldier", "Storyteller", "Thief", "World Traveler"],
+    "Characteristics": ["Affable", "Battle-Hardened", "Bookworm", "Charming", "Cowardly", "Friend to All", "Helpful", "Intimidating Presence", "Leader", "Lone Wolf", "Loyal", "Observant", "Prankster", "Silver Tongue", "Sticky Fingers", "Stubborn to a Fault", "Survivor", "Young and Naive"],
+    "Specialties": ["Acrobat", "Gambler", "Healer", "Inventor", "Magical Historian", "Mapmaker", "Master of Disguise", "Navigator", "Sharpshooter", "Survivalist", "Swashbuckler", "Tactician"],
+    "Skills": ["Animal Whisperer", "Barter", "Deadly Aim", "Fast Learner", "Incredible Strength", "Liar", "Light Feet", "Negotiator", "Photographic Memory", "Quick Hands", "Repair", "Scavenger", "Tracker"],
+    "Phrases": ["Catch Me If You Can", "Fake It Till You Make It", "First Time's the Charm", "Hold the Line", "I Won't Let You Down", "I'll Catch You", "I've Got Your Back", "Knowledge Is Power", "Nature's Friend", "Never Again", "No One Left Behind", "Pick on Someone Your Own Size", "The Show Must Go On", "This Is Not a Negotiation", "Wolf in Sheep's Clothing"]
+  }
+};
+
+SRD.domains = [
+  { id: "arcana", name: "Arcana", blurb: "The domain of innate and instinctual magic — raw, enigmatic forces channeled to manipulate energy and the elements." },
+  { id: "blade", name: "Blade", blurb: "The domain of weapon mastery — the skill to cut short the lives of others and inexorable power over death." },
+  { id: "bone", name: "Bone", blurb: "The domain of tactics and the body — uncanny physical control and an eye for predicting behavior in combat." },
+  { id: "codex", name: "Codex", blurb: "The domain of intensive magical study — commanding, versatile magic drawn from recorded knowledge." },
+  { id: "grace", name: "Grace", blurb: "The domain of charisma — raw magnetism and mastery over language, bending perception by will." },
+  { id: "midnight", name: "Midnight", blurb: "The domain of shadows and secrecy — the art of obscurity, and the power to control and create enigmas." },
+  { id: "sage", name: "Sage", blurb: "The domain of the natural world — the vitality of a blooming flower and the ferocity of a ravenous predator." },
+  { id: "splendor", name: "Splendor", blurb: "The domain of life — the magnificent ability to heal, and to an extent, control death." },
+  { id: "valor", name: "Valor", blurb: "The domain of protection — formidable strength channeled to protect allies in battle." }
+];
+
+SRD.classes = [
+  {
+    id: "bard", name: "Bard", domains: ["grace", "codex"], evasion: 10, hp: 5,
+    description: "Bards are the most charismatic people in all the realms — masters of captivation who thrive in social situations.",
+    classItems: "A romance novel or a letter never opened",
+    hopeFeature: { name: "Make a Scene", text: "Spend 3 Hope to temporarily Distract a target within Close range, giving them a -2 penalty to their Difficulty." },
+    classFeatures: [
+      { name: "Rally", text: "Once per session, describe how you rally the party and give yourself and each of your allies a Rally Die. At level 1, your Rally Die is a d6. A PC can spend their Rally Die to roll it, adding the result to their action roll, reaction roll, damage roll, or to clear a number of Stress equal to the result. At the end of each session, clear all unspent Rally Dice. At level 5, your Rally Die increases to a d8." }
+    ],
+    backgroundQuestions: [
+      "Who from your community taught you to have such confidence in yourself?",
+      "You were in love once. Who did you adore, and how did they hurt you?",
+      "You've always looked up to another bard. Who are they, and why do you idolize them?"
+    ],
+    connections: [
+      "What made you realize we were going to be such good friends?",
+      "What do I do that annoys you?",
+      "Why do you grab my hand at night?"
+    ],
+    subclasses: [
+      {
+        id: "troubadour", name: "Troubadour", spellcastTrait: "presence",
+        description: "Play the Troubadour if you want to play music to bolster your allies.",
+        foundations: [
+          { name: "Gifted Performer", text: "You can play three different types of songs, once each per long rest; describe how you perform for others to gain the listed benefit: Relaxing Song — you and all allies within Close range clear a Hit Point. Epic Song — make a target within Close range temporarily Vulnerable. Heartbreaking Song — you and all allies within Close range gain a Hope." }
+        ],
+        specializations: [
+          { name: "Maestro", text: "Your rallying songs steel the courage of those who listen. When you give a Rally Die to an ally, they can gain a Hope or clear a Stress." }
+        ],
+        masteries: [
+          { name: "Virtuoso", text: "You are among the greatest of your craft and your skill is boundless. You can perform each of your “Gifted Performer” feature's songs twice per long rest." }
+        ]
+      },
+      {
+        id: "wordsmith", name: "Wordsmith", spellcastTrait: "presence",
+        description: "Play the Wordsmith if you want to use clever wordplay and captivate crowds.",
+        foundations: [
+          { name: "Rousing Speech", text: "Once per long rest, you can give a heartfelt, inspiring speech. All allies within Far range clear 2 Stress." },
+          { name: "Heart of a Poet", text: "After you make an action roll to impress, persuade, or offend someone, you can spend a Hope to add a d4 to the roll." }
+        ],
+        specializations: [
+          { name: "Eloquent", text: "Your moving words boost morale. Once per session, when you encourage an ally, you can do one of the following: allow them to find a mundane object or tool they need; Help an Ally without spending Hope; give them an additional downtime move during their next rest." }
+        ],
+        masteries: [
+          { name: "Epic Poetry", text: "Your Rally Die increases to a d10. Additionally, when you Help an Ally, you can narrate the moment as if you were writing the tale of their heroism in a memoir. When you do, roll a d10 as your advantage die." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "druid", name: "Druid", domains: ["sage", "arcana"], evasion: 10, hp: 6,
+    description: "A calling for those who wish to learn from and protect the magic of the wilderness — druids can transform into beasts and shape nature itself.",
+    classItems: "A small bag of rocks and bones or a strange pendant found in the dirt",
+    hopeFeature: { name: "Evolution", text: "Spend 3 Hope to transform into a Beastform without marking a Stress. When you do, choose one trait to raise by +1 until you drop out of that Beastform." },
+    classFeatures: [
+      { name: "Beastform", text: "Mark a Stress to magically transform into a creature of your tier or lower from the Beastform list (see the SRD). You can drop out of this form at any time. While transformed, you can't use weapons or cast spells from domain cards, but you can still use other features or abilities you have access to. You gain the Beastform's features, add their Evasion bonus to your Evasion, and use the trait specified in their statistics for your attack. If you mark your last Hit Point, you automatically drop out of this form." },
+      { name: "Wildtouch", text: "You can perform harmless, subtle effects that involve nature — such as causing a flower to rapidly grow, summoning a slight gust of wind, or starting a campfire — at will." }
+    ],
+    backgroundQuestions: [
+      "Why was the community you grew up in so reliant on nature and its creatures?",
+      "Who was the first wild animal you bonded with? Why did your bond end?",
+      "Who has been trying to hunt you down? What do they want from you?"
+    ],
+    connections: [
+      "What did you confide in me that makes me leap into danger for you every time?",
+      "What animal do I say you remind me of?",
+      "What affectionate nickname have you given me?"
+    ],
+    subclasses: [
+      {
+        id: "warden-elements", name: "Warden of the Elements", spellcastTrait: "instinct",
+        description: "Play the Warden of the Elements if you want to embody the natural elements of the wild.",
+        foundations: [
+          { name: "Elemental Incarnation", text: "Mark a Stress to Channel one of the following elements until you take Severe damage or until your next rest: Fire — when an adversary within Melee range deals damage to you, they take 1d10 magic damage. Earth — gain a bonus to your damage thresholds equal to your Proficiency. Water — when you deal damage to an adversary within Melee range, all other adversaries within Very Close range must mark a Stress. Air — you can hover, gaining advantage on Agility Rolls." }
+        ],
+        specializations: [
+          { name: "Elemental Aura", text: "Once per rest while Channeling, you can assume an aura matching your element. The aura affects targets within Close range until your Channeling ends. Fire — when an adversary marks 1 or more Hit Points, they must also mark a Stress. Earth — your allies gain a +1 bonus to Strength. Water — when an adversary deals damage to you, you can mark a Stress to move them anywhere within Very Close range of where they are. Air — when you or an ally takes damage from an attack beyond Melee range, reduce the damage by 1d8." }
+        ],
+        masteries: [
+          { name: "Elemental Dominion", text: "You further embody your element. While Channeling, you gain the following benefit: Fire — you gain a +1 bonus to your Proficiency for attacks and spells that deal damage. Earth — when you would mark Hit Points, roll a d6 per Hit Point marked; for each result of 6, reduce the number of Hit Points you mark by 1. Water — when an attack against you succeeds, you can mark a Stress to make the attacker temporarily Vulnerable. Air — you gain a +1 bonus to your Evasion and can fly." }
+        ]
+      },
+      {
+        id: "warden-renewal", name: "Warden of Renewal", spellcastTrait: "instinct",
+        description: "Play the Warden of Renewal if you want to use powerful magic to heal your party.",
+        foundations: [
+          { name: "Clarity of Nature", text: "Once per long rest, you can create a space of natural serenity within Close range. When you spend a few minutes resting within the space, clear Stress equal to your Instinct, distributed as you choose between you and your allies." },
+          { name: "Regeneration", text: "Touch a creature and spend 3 Hope. That creature clears 1d4 Hit Points." }
+        ],
+        specializations: [
+          { name: "Regenerative Reach", text: "You can target creatures within Very Close range with your “Regeneration” feature." },
+          { name: "Warden's Protection", text: "Once per long rest, spend 2 Hope to clear 2 Hit Points on 1d4 allies within Close range." }
+        ],
+        masteries: [
+          { name: "Defender", text: "Your animal transformation embodies a healing guardian spirit. When you're in Beastform and an ally within Close range marks 2 or more Hit Points, you can mark a Stress to reduce the number of Hit Points they mark by 1." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guardian", name: "Guardian", domains: ["valor", "blade"], evasion: 9, hp: 7,
+    description: "Guardians fight with remarkable ferocity even against overwhelming odds, defending their cohort above all else.",
+    classItems: "A totem from your mentor or a secret key",
+    hopeFeature: { name: "Frontline Tank", text: "Spend 3 Hope to clear 2 Armor Slots." },
+    classFeatures: [
+      { name: "Unstoppable", text: "Once per long rest, you can become Unstoppable. You gain an Unstoppable Die (d4 at level 1, d6 at level 5), starting with the 1 value facing up. After you make a damage roll that deals 1 or more Hit Points to a target, increase the Unstoppable Die value by one. When the die's value would exceed its maximum or the scene ends, remove the die and drop out of Unstoppable. While Unstoppable: you reduce the severity of physical damage by one threshold; you add the current value of the Unstoppable Die to your damage roll; you can't be Restrained or Vulnerable." }
+    ],
+    backgroundQuestions: [
+      "Who from your community did you fail to protect, and why do you still think of them?",
+      "You've been tasked with protecting something important and delivering it somewhere dangerous. What is it, and where does it need to go?",
+      "You consider an aspect of yourself to be a weakness. What is it, and how has it affected you?"
+    ],
+    connections: [
+      "How did I save your life the first time we met?",
+      "What small gift did you give me that you notice I always carry with me?",
+      "What lie have you told me about yourself that I absolutely believe?"
+    ],
+    subclasses: [
+      {
+        id: "stalwart", name: "Stalwart", spellcastTrait: null,
+        description: "Play the Stalwart if you want to take heavy blows and keep fighting.",
+        foundations: [
+          { name: "Unwavering", text: "Gain a permanent +1 bonus to your damage thresholds." },
+          { name: "Iron Will", text: "When you take physical damage, you can mark an additional Armor Slot to reduce the severity." }
+        ],
+        specializations: [
+          { name: "Unrelenting", text: "Gain a permanent +2 bonus to your damage thresholds." },
+          { name: "Partners-in-Arms", text: "When an ally within Very Close range takes damage, you can mark an Armor Slot to reduce the severity by one threshold." }
+        ],
+        masteries: [
+          { name: "Undaunted", text: "Gain a permanent +3 bonus to your damage thresholds." },
+          { name: "Loyal Protector", text: "When an ally within Close range has 2 or fewer Hit Points and would take damage, you can mark a Stress to sprint to their side and take the damage instead." }
+        ]
+      },
+      {
+        id: "vengeance", name: "Vengeance", spellcastTrait: null,
+        description: "Play the Vengeance if you want to strike down enemies who harm you or your allies.",
+        foundations: [
+          { name: "At Ease", text: "Gain an additional Stress slot." },
+          { name: "Revenge", text: "When an adversary within Melee range succeeds on an attack against you, you can mark 2 Stress to force the attacker to mark a Hit Point." }
+        ],
+        specializations: [
+          { name: "Act of Reprisal", text: "When an adversary damages an ally within Melee range, you gain a +1 bonus to your Proficiency for the next successful attack you make against that adversary." }
+        ],
+        masteries: [
+          { name: "Nemesis", text: "Spend 2 Hope to Prioritize an adversary until your next rest. When you make an attack against your Prioritized adversary, you can swap the results of your Hope and Fear Dice. You can only Prioritize one adversary at a time." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "ranger", name: "Ranger", domains: ["bone", "sage"], evasion: 12, hp: 6,
+    description: "Highly skilled hunters and sly tacticians who pursue their quarry with cunning and patience, often alongside an animal companion.",
+    classItems: "A trophy from your first kill or a seemingly broken compass",
+    hopeFeature: { name: "Hold Them Off", text: "Spend 3 Hope when you succeed on an attack with a weapon to use that same roll against two additional adversaries within range of the attack." },
+    classFeatures: [
+      { name: "Ranger's Focus", text: "Spend a Hope and make an attack against a target. On a success, deal your attack's normal damage and temporarily make the attack's target your Focus. Until this feature ends or you make a different creature your Focus, you gain the following benefits against your Focus: you know precisely what direction they are in; when you deal damage to them, they must mark a Stress; when you fail an attack against them, you can end your Ranger's Focus feature to reroll your Duality Dice." }
+    ],
+    backgroundQuestions: [
+      "A terrible creature hurt your community, and you've vowed to hunt them down. What are they, and what unique trail or sign do they leave behind?",
+      "Your first kill almost killed you, too. What was it, and what part of you was never the same after that event?",
+      "You've traveled many dangerous lands, but what is the one place you refuse to go?"
+    ],
+    connections: [
+      "What friendly competition do we have?",
+      "Why do you act differently when we're alone than when others are around?",
+      "What threat have you asked me to watch for, and why are you worried about it?"
+    ],
+    subclasses: [
+      {
+        id: "beastbound", name: "Beastbound", spellcastTrait: "agility",
+        description: "Play the Beastbound if you want to form a deep bond with an animal ally.",
+        foundations: [
+          { name: "Companion", text: "You have an animal companion of your choice (at the GM's discretion). They stay by your side unless you tell them otherwise. Take the Ranger Companion sheet; when you level up your character, choose a level-up option for your companion from this sheet as well. (Companion: Evasion 10, two +2 Experiences, d6 Melee attack at level 1; when they would take damage they mark a Stress instead.)" }
+        ],
+        specializations: [
+          { name: "Expert Training", text: "Choose an additional level-up option for your companion." },
+          { name: "Battle-Bonded", text: "When an adversary attacks you while they're within your companion's Melee range, you gain a +2 bonus to your Evasion against the attack." }
+        ],
+        masteries: [
+          { name: "Advanced Training", text: "Choose two additional level-up options for your companion." },
+          { name: "Loyal Friend", text: "Once per long rest, when the damage from an attack would mark your companion's last Stress or your last Hit Point and you're within Close range of each other, you or your companion can rush to the other's side and take that damage instead." }
+        ]
+      },
+      {
+        id: "wayfinder", name: "Wayfinder", spellcastTrait: "agility",
+        description: "Play the Wayfinder if you want to hunt your prey and strike with deadly force.",
+        foundations: [
+          { name: "Ruthless Predator", text: "When you make a damage roll, you can mark a Stress to gain a +1 bonus to your Proficiency. Additionally, when you deal Severe damage to an adversary, they must mark a Stress." },
+          { name: "Path Forward", text: "When you're traveling to a place you've previously visited or you carry an object that has been at the location before, you can identify the shortest, most direct path to your destination." }
+        ],
+        specializations: [
+          { name: "Elusive Predator", text: "When your Focus makes an attack against you, you gain a +2 bonus to your Evasion against the attack." }
+        ],
+        masteries: [
+          { name: "Apex Predator", text: "Before you make an attack roll against your Focus, you can spend a Hope. On a successful attack, you remove a Fear from the GM's Fear pool." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "rogue", name: "Rogue", domains: ["midnight", "grace"], evasion: 12, hp: 6,
+    description: "Scoundrels who move through the world anonymously, tricking foes with sharp wits and blades, manipulating shadow and movement.",
+    classItems: "A set of forgery tools or a grappling hook",
+    hopeFeature: { name: "Rogue's Dodge", text: "Spend 3 Hope to gain a +2 bonus to your Evasion until the next time an attack succeeds against you. Otherwise, this bonus lasts until your next rest." },
+    classFeatures: [
+      { name: "Cloaked", text: "Any time you would be Hidden, you are instead Cloaked. In addition to the benefits of the Hidden condition, while Cloaked you remain unseen if you are stationary when an adversary moves to where they would normally see you. After you make an attack or end a move within line of sight of an adversary, you are no longer Cloaked." },
+      { name: "Sneak Attack", text: "When you succeed on an attack while Cloaked or while an ally is within Melee range of your target, add a number of d6s equal to your tier to your damage roll (tier 1 at level 1; tier 2 at levels 2–4; tier 3 at levels 5–7; tier 4 at levels 8–10)." }
+    ],
+    backgroundQuestions: [
+      "What did you get caught doing that got you exiled from your home community?",
+      "You used to have a different life, but you've tried to leave it behind. Who from your past is still chasing you?",
+      "Who from your past were you most sad to say goodbye to?"
+    ],
+    connections: [
+      "What did I recently convince you to do that got us both in trouble?",
+      "What have I discovered about your past that I hold secret from the others?",
+      "Who do you know from my past, and how have they influenced your feelings about me?"
+    ],
+    subclasses: [
+      {
+        id: "nightwalker", name: "Nightwalker", spellcastTrait: "finesse",
+        description: "Play the Nightwalker if you want to manipulate shadows to maneuver through the environment.",
+        foundations: [
+          { name: "Shadow Stepper", text: "You can move from shadow to shadow. When you move into an area of darkness or a shadow cast by another creature or object, you can mark a Stress to disappear from where you are and reappear inside another shadow within Far range. When you reappear, you are Cloaked." }
+        ],
+        specializations: [
+          { name: "Dark Cloud", text: "Make a Spellcast Roll (15). On a success, create a temporary dark cloud that covers any area within Close range. Anyone in this cloud can't see outside of it, and anyone outside of it can't see in. You're considered Cloaked from any adversary for whom the cloud blocks line of sight." },
+          { name: "Adrenaline", text: "While you're Vulnerable, add your level to your damage rolls." }
+        ],
+        masteries: [
+          { name: "Fleeting Shadow", text: "Gain a permanent +1 bonus to your Evasion. You can use your “Shadow Stepper” feature to move within Very Far range." },
+          { name: "Vanishing Act", text: "Mark a Stress to become Cloaked at any time. When Cloaked from this feature, you automatically clear the Restrained condition if you have it. You remain Cloaked in this way until you roll with Fear or until your next rest." }
+        ]
+      },
+      {
+        id: "syndicate", name: "Syndicate", spellcastTrait: "finesse",
+        description: "Play the Syndicate if you want to have a web of contacts everywhere you go.",
+        foundations: [
+          { name: "Well-Connected", text: "When you arrive in a prominent town or environment, you know somebody who calls this place home. Give them a name, note how you think they could be useful, and choose one fact from the following list: they owe me a favor, but they'll be hard to find; they're going to ask for something in exchange; they're always in a great deal of trouble; we used to be together — it's a long story; we didn't part on great terms." }
+        ],
+        specializations: [
+          { name: "Contacts Everywhere", text: "Once per session, you can briefly call on a shady contact. Choose one of the following benefits and describe what brought them here to help you in this moment: they provide 1 handful of gold, a unique tool, or a mundane object that the situation requires; on your next action roll, their help provides a +3 bonus to the result of your Hope or Fear Die; the next time you deal damage, they snipe from the shadows, adding 2d8 to your damage roll." }
+        ],
+        masteries: [
+          { name: "Reliable Backup", text: "You can use your “Contacts Everywhere” feature three times per session. The following options are added to the list of benefits you can choose from: when you mark 1 or more Hit Points, they can rush out to shield you, reducing the Hit Points marked by 1; when you make a Presence Roll in conversation, they back you up and you can roll a d20 as your Hope Die." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "seraph", name: "Seraph", domains: ["splendor", "valor"], evasion: 9, hp: 7,
+    description: "Divine fighters and healers imbued with sacred purpose — terrifying foes to those who defy their purpose.",
+    classItems: "A bundle of offerings or a sigil of your god",
+    hopeFeature: { name: "Life Support", text: "Spend 3 Hope to clear a Hit Point on an ally within Close range." },
+    classFeatures: [
+      { name: "Prayer Dice", text: "At the beginning of each session, roll a number of d4s equal to your subclass's Spellcast trait and place them on your character sheet. These are your Prayer Dice. You can spend any number of Prayer Dice to aid yourself or an ally within Far range: use a spent die's value to reduce incoming damage, add to a roll's result after the roll is made, or gain Hope equal to the result. At the end of each session, clear all unspent Prayer Dice." }
+    ],
+    backgroundQuestions: [
+      "Which god did you devote yourself to? What incredible feat did they perform for you in a moment of desperation?",
+      "How did your appearance change after taking your oath?",
+      "In what strange or unique way do you communicate with your god?"
+    ],
+    connections: [
+      "What promise did you make me agree to, should you die on the battlefield?",
+      "Why do you ask me so many questions about my god?",
+      "You've told me to protect one member of our party above all others, even yourself. Who are they and why?"
+    ],
+    subclasses: [
+      {
+        id: "divine-wielder", name: "Divine Wielder", spellcastTrait: "strength",
+        description: "Play the Divine Wielder if you want to dominate the battlefield with a legendary weapon.",
+        foundations: [
+          { name: "Spirit Weapon", text: "When you have an equipped weapon with a range of Melee or Very Close, it can fly from your hand to attack an adversary within Close range and then return to you. You can mark a Stress to target an additional adversary within range with the same attack roll." },
+          { name: "Sparing Touch", text: "Once per long rest, touch a creature and clear 2 Hit Points or 2 Stress from them." }
+        ],
+        specializations: [
+          { name: "Devout", text: "When you roll your Prayer Dice, you can roll an additional die and discard the lowest result. Additionally, you can use your “Sparing Touch” feature twice instead of once per long rest." }
+        ],
+        masteries: [
+          { name: "Sacred Resonance", text: "When you roll damage for your “Spirit Weapon” feature, if any of the die results match, double the value of each matching die. For example, if you roll two 5s, they count as two 10s." }
+        ]
+      },
+      {
+        id: "winged-sentinel", name: "Winged Sentinel", spellcastTrait: "strength",
+        description: "Play the Winged Sentinel if you want to take flight and strike crushing blows from the sky.",
+        foundations: [
+          { name: "Wings of Light", text: "You can fly. While flying, you can: mark a Stress to pick up and carry another willing creature approximately your size or smaller; spend a Hope to deal an extra 1d8 damage on a successful attack." }
+        ],
+        specializations: [
+          { name: "Ethereal Visage", text: "Your supernatural visage strikes awe and fear. While flying, you have advantage on Presence Rolls. When you succeed with Hope on a Presence Roll, you can remove a Fear from the GM's Fear pool instead of gaining Hope." }
+        ],
+        masteries: [
+          { name: "Ascendant", text: "Gain a permanent +4 bonus to your Severe damage threshold." },
+          { name: "Power of the Gods", text: "While flying, you deal an extra 1d12 damage instead of 1d8 from your “Wings of Light” feature." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "sorcerer", name: "Sorcerer", domains: ["arcana", "midnight"], evasion: 10, hp: 6,
+    description: "Innate magic users who learn to cultivate and control the power they already possess — a dangerous force when undisciplined.",
+    classItems: "A whispering orb or a family heirloom",
+    hopeFeature: { name: "Volatile Magic", text: "Spend 3 Hope to reroll any number of your damage dice on an attack that deals magic damage." },
+    classFeatures: [
+      { name: "Arcane Sense", text: "You can sense the presence of magical people and objects within Close range." },
+      { name: "Minor Illusion", text: "Make a Spellcast Roll (10). On a success, you create a minor visual illusion no larger than yourself within Close range. This illusion is convincing to anyone at Close range or farther." },
+      { name: "Channel Raw Power", text: "Once per long rest, you can place a domain card from your loadout into your vault and choose to either: gain Hope equal to the level of the card, or enhance a spell that deals damage, gaining a bonus to your damage roll equal to twice the level of the card." }
+    ],
+    backgroundQuestions: [
+      "What did you do that made the people in your community wary of you?",
+      "What mentor taught you to control your untamed magic, and why are they no longer able to guide you?",
+      "You have a deep fear you hide from everyone. What is it, and why does it scare you?"
+    ],
+    connections: [
+      "Why do you trust me so deeply?",
+      "What did I do that makes you cautious around me?",
+      "Why do we keep our shared past a secret?"
+    ],
+    subclasses: [
+      {
+        id: "elemental-origin", name: "Elemental Origin", spellcastTrait: "instinct",
+        description: "Play the Elemental Origin if you want to channel raw magic to take the shape of a particular element.",
+        foundations: [
+          { name: "Elementalist", text: "Choose one of the following elements at character creation: air, earth, fire, lightning, water. You can shape this element into harmless effects. Additionally, spend a Hope and describe how your control over this element helps an action roll you're about to make, then either gain a +2 bonus to the roll or a +3 bonus to the roll's damage." }
+        ],
+        specializations: [
+          { name: "Natural Evasion", text: "You can call forth your element to protect you from harm. When an attack roll against you succeeds, you can mark a Stress and describe how you use your element to defend you. When you do, roll a d6 and add its result to your Evasion against the attack." }
+        ],
+        masteries: [
+          { name: "Transcendence", text: "Once per long rest, you can transform into a physical manifestation of your element. When you do, describe your transformation and choose two of the following benefits to gain until your next rest: +4 bonus to your Severe threshold; +1 bonus to a character trait of your choice; +1 bonus to your Proficiency; +2 bonus to your Evasion." }
+        ]
+      },
+      {
+        id: "primal-origin", name: "Primal Origin", spellcastTrait: "instinct",
+        description: "Play the Primal Origin if you want to extend the versatility of your spells in powerful ways.",
+        foundations: [
+          { name: "Manipulate Magic", text: "Your primal origin allows you to modify the essence of magic itself. After you cast a spell or make an attack using a weapon that deals magic damage, you can mark a Stress to do one of the following: extend the spell or attack's reach by one range; gain a +2 bonus to the action roll's result; double a damage die of your choice; hit an additional target within range." }
+        ],
+        specializations: [
+          { name: "Enchanted Aid", text: "You can enhance the magic of others with your essence. When you Help an Ally with a Spellcast Roll, you can roll a d8 as your advantage die. Once per long rest, after an ally has made a Spellcast Roll with your help, you can swap the results of their Duality Dice." }
+        ],
+        masteries: [
+          { name: "Arcane Charge", text: "You can gather magical energy to enhance your capabilities. When you take magic damage, you become Charged. Alternatively, you can spend 2 Hope to become Charged. When you successfully make an attack that deals magic damage while Charged, you can clear your Charge to either gain a +10 bonus to the damage roll or gain a +3 bonus to the Difficulty of a reaction roll the spell causes the target to make. You stop being Charged at your next long rest." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "warrior", name: "Warrior", domains: ["blade", "bone"], evasion: 11, hp: 6,
+    description: "Masters of weapons and violence with agile bodies and minds — some of the most sought-after fighters across the realms.",
+    classItems: "The drawing of a lover or a sharpening stone",
+    hopeFeature: { name: "No Mercy", text: "Spend 3 Hope to gain a +1 bonus to your attack rolls until your next rest." },
+    classFeatures: [
+      { name: "Attack of Opportunity", text: "If an adversary within Melee range attempts to leave that range, make a reaction roll using a trait of your choice against their Difficulty. Choose one effect on a success, or two if you critically succeed: they can't move from where they are; you deal damage to them equal to your primary weapon's damage; you move with them." },
+      { name: "Combat Training", text: "You ignore burden when equipping weapons. When you deal physical damage, you gain a bonus to your damage roll equal to your level." }
+    ],
+    backgroundQuestions: [
+      "Who taught you to fight, and why did they stay behind when you left home?",
+      "Somebody defeated you in battle years ago and left you to die. Who was it, and how did they betray you?",
+      "What legendary place have you always wanted to visit, and why is it so special?"
+    ],
+    connections: [
+      "We knew each other long before this party came together. How?",
+      "What mundane task do you usually help me with off the battlefield?",
+      "What fear am I helping you overcome?"
+    ],
+    subclasses: [
+      {
+        id: "call-brave", name: "Call of the Brave", spellcastTrait: null,
+        description: "Play the Call of the Brave if you want to use the might of your enemies to fuel your own power.",
+        foundations: [
+          { name: "Courage", text: "When you fail a roll with Fear, you gain a Hope." },
+          { name: "Battle Ritual", text: "Once per long rest, before you attempt something incredibly dangerous or face off against a foe who clearly outmatches you, describe what ritual you perform or preparations you make. When you do, clear 2 Stress and gain 2 Hope." }
+        ],
+        specializations: [
+          { name: "Rise to the Challenge", text: "You are vigilant in the face of mounting danger. While you have 2 or fewer Hit Points unmarked, you can roll a d20 as your Hope Die." }
+        ],
+        masteries: [
+          { name: "Camaraderie", text: "Your unwavering bravery is a rallying point for your allies. You can initiate a Tag Team Roll one additional time per session. Additionally, when an ally initiates a Tag Team Roll with you, they only need to spend 2 Hope to do so." }
+        ]
+      },
+      {
+        id: "call-slayer", name: "Call of the Slayer", spellcastTrait: null,
+        description: "Play the Call of the Slayer if you want to strike down adversaries with immense force.",
+        foundations: [
+          { name: "Slayer", text: "You gain a pool of dice called Slayer Dice. On a roll with Hope, you can place a d6 on this card instead of gaining a Hope, adding the die to the pool. You can store a number of Slayer Dice equal to your Proficiency. When you make an attack roll or damage roll, you can spend any number of these Slayer Dice, rolling them and adding their result to the roll. At the end of each session, clear any unspent Slayer Dice on this card and gain a Hope per die cleared." }
+        ],
+        specializations: [
+          { name: "Weapon Specialist", text: "You can wield multiple weapons with dangerous ease. When you succeed on an attack, you can spend a Hope to add one of the damage dice from your secondary weapon to the damage roll. Additionally, once per long rest when you roll your Slayer Dice, reroll any 1s." }
+        ],
+        masteries: [
+          { name: "Martial Preparation", text: "You're an inspirational warrior to all who travel with you. Your party gains access to the Martial Preparation downtime move. To use this move during a rest, describe how you instruct and train with your party. You and each ally who chooses this downtime move gain a d6 Slayer Die, which can be spent to add its result to an attack or damage roll." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "wizard", name: "Wizard", domains: ["codex", "splendor"], evasion: 11, hp: 5,
+    description: "Scholars who acquire and hone immense magical power over years of learning — often wise and powerful figures in their communities.",
+    classItems: "A book you're trying to translate or a tiny, harmless elemental pet",
+    hopeFeature: { name: "Not This Time", text: "Spend 3 Hope to force an adversary within Far range to reroll an attack or damage roll." },
+    classFeatures: [
+      { name: "Prestidigitation", text: "You can perform harmless, subtle magical effects at will. For example, you can change an object's color, create a smell, light a candle, cause a tiny object to float, illuminate a room, or repair a small object." },
+      { name: "Strange Patterns", text: "Choose a number between 1 and 12. When you roll that number on a Duality Die, gain a Hope or clear a Stress. You can change this number when you take a long rest." }
+    ],
+    backgroundQuestions: [
+      "What responsibilities did your community once count on you for? How did you let them down?",
+      "You've spent your life searching for a book or object of great significance. What is it, and why is it so important to you?",
+      "You have a powerful rival. Who are they, and why are you so determined to defeat them?"
+    ],
+    connections: [
+      "What favor have I asked of you that you're not sure you can fulfill?",
+      "What weird hobby or strange fascination do we both share?",
+      "What secret about yourself have you entrusted only to me?"
+    ],
+    subclasses: [
+      {
+        id: "school-knowledge", name: "School of Knowledge", spellcastTrait: "knowledge",
+        description: "Play the School of Knowledge if you want a keen understanding of the world around you.",
+        foundations: [
+          { name: "Prepared", text: "Take an additional domain card of your level or lower from a domain you have access to." },
+          { name: "Adept", text: "When you Utilize an Experience, you can mark a Stress instead of spending a Hope. If you do, double your Experience modifier for that roll." }
+        ],
+        specializations: [
+          { name: "Accomplished", text: "Take an additional domain card of your level or lower from a domain you have access to." },
+          { name: "Perfect Recall", text: "Once per rest, when you recall a domain card in your vault, you can reduce its Recall Cost by 1." }
+        ],
+        masteries: [
+          { name: "Brilliant", text: "Take an additional domain card of your level or lower from a domain you have access to." },
+          { name: "Honed Expertise", text: "When you use an Experience, roll a d6. On a result of 5 or higher, you can use it without spending Hope." }
+        ]
+      },
+      {
+        id: "school-war", name: "School of War", spellcastTrait: "knowledge",
+        description: "Play the School of War if you want to utilize trained magic for violence.",
+        foundations: [
+          { name: "Battlemage", text: "You've focused your studies on becoming an unconquerable force on the battlefield. Gain an additional Hit Point slot." },
+          { name: "Face Your Fear", text: "When you succeed with Fear on an attack roll, you deal an extra 1d10 magic damage." }
+        ],
+        specializations: [
+          { name: "Conjure Shield", text: "You can maintain a protective barrier of magic. While you have at least 2 Hope, you add your Proficiency to your Evasion." },
+          { name: "Fueled by Fear", text: "The extra magic damage from your “Face Your Fear” feature increases to 2d10." }
+        ],
+        masteries: [
+          { name: "Thrive in Chaos", text: "When you succeed on an attack, you can mark a Stress after rolling damage to force the target to mark an additional Hit Point." },
+          { name: "Have No Fear", text: "The extra magic damage from your “Face Your Fear” feature increases to 3d10." }
+        ]
+      }
+    ]
+  }
+];
+
+// ===== SRD DATA — Part 2: ancestries & communities =====
+SRD.ancestries = [
+  { id: "clank", name: "Clank", blurb: "Sentient mechanical beings built from a variety of materials, including metal, wood, and stone.",
+    features: [
+      { name: "Purposeful Design", text: "Decide who made you and for what purpose. At character creation, choose one of your Experiences that best aligns with this purpose and gain a permanent +1 bonus to it." },
+      { name: "Efficient", text: "When you take a short rest, you can choose a long rest move instead of a short rest move." }
+    ] },
+  { id: "drakona", name: "Drakona", blurb: "Wingless dragons in humanoid form with thick scales and a powerful elemental breath.",
+    features: [
+      { name: "Scales", text: "Your scales act as natural protection. When you would take Severe damage, you can mark a Stress to mark 1 fewer Hit Points." },
+      { name: "Elemental Breath", text: "Choose an element for your breath (such as electricity, fire, or ice). You can use this breath against a target or group of targets within Very Close range, treating it as an Instinct weapon that deals d8 magic damage using your Proficiency." }
+    ] },
+  { id: "dwarf", name: "Dwarf", blurb: "Short humanoids with square frames, dense musculature, thick hair, and naturally resilient keratin-rich skin.",
+    features: [
+      { name: "Thick Skin", text: "When you take Minor damage, you can mark 2 Stress instead of marking a Hit Point." },
+      { name: "Increased Fortitude", text: "Spend 3 Hope to halve incoming physical damage." }
+    ] },
+  { id: "elf", name: "Elf", blurb: "Tall humanoids with pointed ears and acutely attuned senses who rest in celestial trances instead of sleep.",
+    features: [
+      { name: "Quick Reactions", text: "Mark a Stress to gain advantage on a reaction roll." },
+      { name: "Celestial Trance", text: "During a rest, you can drop into a trance to choose an additional downtime move." }
+    ] },
+  { id: "faerie", name: "Faerie", blurb: "Winged humanoid creatures with insectile features who each undergo a unique metamorphosis.",
+    features: [
+      { name: "Luckbender", text: "Once per session, after you or a willing ally within Close range makes an action roll, you can spend 3 Hope to reroll the Duality Dice." },
+      { name: "Wings", text: "You can fly. While flying, you can mark a Stress after an adversary makes an attack against you to gain a +2 bonus to your Evasion against that attack." }
+    ] },
+  { id: "faun", name: "Faun", blurb: "Humanoid goats with curving horns, square pupils, cloven hooves, and powerful kicks.",
+    features: [
+      { name: "Caprine Leap", text: "You can leap anywhere within Close range as though you were using normal movement, allowing you to vault obstacles, jump across gaps, or scale barriers with ease." },
+      { name: "Kick", text: "When you succeed on an attack against a target within Melee range, you can mark a Stress to kick yourself off them, dealing an extra 2d6 damage and knocking back either yourself or the target to Very Close range." }
+    ] },
+  { id: "firbolg", name: "Firbolg", blurb: "Tall, muscular bovine humanoids covered in fur, with broad noses and long drooping ears.",
+    features: [
+      { name: "Charge", text: "When you succeed on an Agility Roll to move from Far or Very Far range into Melee range with one or more targets, you can mark a Stress to deal 1d12 physical damage to all targets within Melee range." },
+      { name: "Unshakable", text: "When you would mark a Stress, roll a d6. On a result of 6, don't mark it." }
+    ] },
+  { id: "fungril", name: "Fungril", blurb: "Humanoid mushrooms in an incredible variety of shapes and colors who communicate through mycelial networks.",
+    features: [
+      { name: "Fungril Network", text: "Make an Instinct Roll (12) to use your mycelial array to speak with others of your ancestry. On a success, you can communicate across any distance." },
+      { name: "Death Connection", text: "While touching a corpse that died recently, you can mark a Stress to extract one memory from the corpse related to a specific emotion or sensation of your choice." }
+    ] },
+  { id: "galapa", name: "Galapa", blurb: "Anthropomorphic turtles with large, domed shells into which they can retract.",
+    features: [
+      { name: "Shell", text: "Gain a bonus to your damage thresholds equal to your Proficiency." },
+      { name: "Retract", text: "Mark a Stress to retract into your shell. While in your shell, you have resistance to physical damage, you have disadvantage on action rolls, and you can't move." }
+    ] },
+  { id: "giant", name: "Giant", blurb: "Towering humanoids with broad shoulders, long arms, and one to three eyes.",
+    features: [
+      { name: "Endurance", text: "Gain an additional Hit Point slot at character creation." },
+      { name: "Reach", text: "Treat any weapon, ability, spell, or other feature that has a Melee range as though it has a Very Close range instead." }
+    ] },
+  { id: "goblin", name: "Goblin", blurb: "Small humanoids with large eyes and massive membranous ears, keen of hearing and sight.",
+    features: [
+      { name: "Surefooted", text: "You ignore disadvantage on Agility Rolls." },
+      { name: "Danger Sense", text: "Once per rest, mark a Stress to force an adversary to reroll an attack against you or an ally within Very Close range." }
+    ] },
+  { id: "halfling", name: "Halfling", blurb: "Small humanoids with large hairy feet, prominent rounded ears, and a strong internal compass.",
+    features: [
+      { name: "Luckbringer", text: "At the start of each session, everyone in your party gains a Hope." },
+      { name: "Internal Compass", text: "When you roll a 1 on your Hope Die, you can reroll it." }
+    ] },
+  { id: "human", name: "Human", blurb: "Dexterous, adaptable humanoids built for endurance across harsh climates.",
+    features: [
+      { name: "High Stamina", text: "Gain an additional Stress slot at character creation." },
+      { name: "Adaptability", text: "When you fail a roll that utilized one of your Experiences, you can mark a Stress to reroll." }
+    ] },
+  { id: "infernis", name: "Infernis", blurb: "Horned humanoids descended from demons of the Circles Below, capable of a dread visage.",
+    features: [
+      { name: "Fearless", text: "When you roll with Fear, you can mark 2 Stress to change it into a roll with Hope instead." },
+      { name: "Dread Visage", text: "You have advantage on rolls to intimidate hostile creatures." }
+    ] },
+  { id: "katari", name: "Katari", blurb: "Feline humanoids with retractable claws, slit pupils, swiveling ears, and heightened senses.",
+    features: [
+      { name: "Feline Instincts", text: "When you make an Agility Roll, you can spend 2 Hope to reroll your Hope Die." },
+      { name: "Retracting Claws", text: "Make an Agility Roll to scratch a target within Melee range. On a success, they become temporarily Vulnerable." }
+    ] },
+  { id: "orc", name: "Orc", blurb: "Square-featured humanoids with boar-like tusks, pointed ears, and muscular builds.",
+    features: [
+      { name: "Sturdy", text: "When you have 1 Hit Point remaining, attacks against you have disadvantage." },
+      { name: "Tusks", text: "When you succeed on an attack against a target within Melee range, you can spend a Hope to gore the target with your tusks, dealing an extra 1d6 damage." }
+    ] },
+  { id: "ribbet", name: "Ribbet", blurb: "Anthropomorphic frogs with protruding eyes, webbed hands and feet, and long tongues.",
+    features: [
+      { name: "Amphibious", text: "You can breathe and move naturally underwater." },
+      { name: "Long Tongue", text: "You can use your long tongue to grab onto things within Close range. Mark a Stress to use your tongue as a Finesse Close weapon that deals d12 physical damage using your Proficiency." }
+    ] },
+  { id: "simiah", name: "Simiah", blurb: "Anthropomorphic monkeys and apes with long limbs, prehensile feet, and unique agility.",
+    features: [
+      { name: "Natural Climber", text: "You have advantage on Agility Rolls that involve balancing and climbing." },
+      { name: "Nimble", text: "Gain a permanent +1 bonus to your Evasion at character creation." }
+    ] }
+];
+
+SRD.mixedAncestryRule = "To create a Mixed Ancestry, choose two ancestries: take the first-listed feature from one and the second-listed feature from the other. Describe your heritage however you like (e.g., “goblin-orc”).";
+
+SRD.communities = [
+  { id: "highborne", name: "Highborne", adjectives: ["amiable", "candid", "conniving", "enterprising", "ostentatious", "unflappable"],
+    blurb: "A life of elegance, opulence, and prestige within the upper echelons of society.",
+    feature: { name: "Privilege", text: "You have advantage on rolls to consort with nobles, negotiate prices, or leverage your reputation to get what you want." } },
+  { id: "loreborne", name: "Loreborne", adjectives: ["direct", "eloquent", "inquisitive", "patient", "rhapsodic", "witty"],
+    blurb: "A society that favors strong academic or political prowess and highly values knowledge.",
+    feature: { name: "Well-Read", text: "You have advantage on rolls that involve the history, culture, or politics of a prominent person or place." } },
+  { id: "orderborne", name: "Orderborne", adjectives: ["ambitious", "benevolent", "pensive", "prudent", "sardonic", "stoic"],
+    blurb: "A collective that focuses on discipline or faith, aligned around a common value or goal.",
+    feature: { name: "Dedicated", text: "Record three sayings or values your upbringing instilled in you. Once per rest, when you describe how you're embodying one of these principles through your current action, you can roll a d20 as your Hope Die." } },
+  { id: "ridgeborne", name: "Ridgeborne", adjectives: ["bold", "hardy", "indomitable", "loyal", "reserved", "stubborn"],
+    blurb: "Hardy folk of the rocky peaks and sharp cliffs of the mountainside.",
+    feature: { name: "Steady", text: "You have advantage on rolls to traverse dangerous cliffs and ledges, navigate harsh environments, and use your survival knowledge." } },
+  { id: "seaborne", name: "Seaborne", adjectives: ["candid", "cooperative", "exuberant", "fierce", "resolute", "weathered"],
+    blurb: "Communities built on or near a large body of water, closely tied to the tides.",
+    feature: { name: "Know the Tide", text: "You can sense the ebb and flow of life. When you roll with Fear, place a token on your community card. You can hold a number of tokens equal to your level. Before you make an action roll, you can spend any number of these tokens to gain a +1 bonus to the roll for each token spent. At the end of each session, clear all unspent tokens." } },
+  { id: "slyborne", name: "Slyborne", adjectives: ["calculating", "clever", "formidable", "perceptive", "shrewd", "tenacious"],
+    blurb: "A group that operates outside the law — criminals, grifters, and con artists with strict codes of honor.",
+    feature: { name: "Scoundrel", text: "You have advantage on rolls to negotiate with criminals, detect lies, or find a safe place to hide." } },
+  { id: "underborne", name: "Underborne", adjectives: ["composed", "elusive", "indomitable", "innovative", "resourceful", "unpretentious"],
+    blurb: "Subterranean societies known for incredible boldness and feats of architecture and engineering.",
+    feature: { name: "Low-Light Living", text: "When you're in an area with low light or heavy shadow, you have advantage on rolls to hide, investigate, or perceive details within that area." } },
+  { id: "wanderborne", name: "Wanderborne", adjectives: ["inscrutable", "magnanimous", "mirthful", "reliable", "savvy", "unorthodox"],
+    blurb: "Nomads defined by their traveling lifestyle, valuing information, skills, and connections over possessions.",
+    feature: { name: "Nomadic Pack", text: "Add a Nomadic Pack to your inventory. Once per session, you can spend a Hope to reach into this pack and pull out a mundane item that's useful to your situation. Work with the GM to figure out what item you take out." } },
+  { id: "wildborne", name: "Wildborne", adjectives: ["hardy", "loyal", "nurturing", "reclusive", "sagacious", "vibrant"],
+    blurb: "Deep-forest dwellers dedicated to the conservation of their homelands.",
+    feature: { name: "Lightfoot", text: "Your movement is naturally silent. You have advantage on rolls to move without being heard." } }
+];
+
+// ===== SRD DATA — Part 3: equipment, domain cards, leveling =====
+
+// Tier 1 primary weapons (physical)
+SRD.primaryWeapons = [
+  { id: "broadsword", name: "Broadsword", trait: "agility", range: "Melee", damage: "d8", type: "phy", burden: 1, feature: "Reliable: +1 to attack rolls" },
+  { id: "longsword", name: "Longsword", trait: "agility", range: "Melee", damage: "d8+3", type: "phy", burden: 2, feature: "" },
+  { id: "battleaxe", name: "Battleaxe", trait: "strength", range: "Melee", damage: "d10+3", type: "phy", burden: 2, feature: "" },
+  { id: "greatsword", name: "Greatsword", trait: "strength", range: "Melee", damage: "d10+3", type: "phy", burden: 2, feature: "Massive: −1 to Evasion; on a successful attack, roll an additional damage die and discard the lowest result.", evasionMod: -1 },
+  { id: "mace", name: "Mace", trait: "strength", range: "Melee", damage: "d8+1", type: "phy", burden: 1, feature: "" },
+  { id: "warhammer", name: "Warhammer", trait: "strength", range: "Melee", damage: "d12+3", type: "phy", burden: 2, feature: "Heavy: −1 to Evasion", evasionMod: -1 },
+  { id: "dagger", name: "Dagger", trait: "finesse", range: "Melee", damage: "d8+1", type: "phy", burden: 1, feature: "" },
+  { id: "quarterstaff", name: "Quarterstaff", trait: "instinct", range: "Melee", damage: "d10+3", type: "phy", burden: 2, feature: "" },
+  { id: "cutlass", name: "Cutlass", trait: "presence", range: "Melee", damage: "d8+1", type: "phy", burden: 1, feature: "" },
+  { id: "rapier", name: "Rapier", trait: "presence", range: "Melee", damage: "d8", type: "phy", burden: 1, feature: "Quick: When you make an attack, you can mark a Stress to target another creature within range." },
+  { id: "halberd", name: "Halberd", trait: "strength", range: "Very Close", damage: "d10+2", type: "phy", burden: 2, feature: "Cumbersome: −1 to Finesse", traitMod: { finesse: -1 } },
+  { id: "spear", name: "Spear", trait: "finesse", range: "Very Close", damage: "d10+2", type: "phy", burden: 2, feature: "Cumbersome: −1 to Finesse", traitMod: { finesse: -1 } },
+  { id: "shortbow", name: "Shortbow", trait: "agility", range: "Far", damage: "d6+3", type: "phy", burden: 2, feature: "" },
+  { id: "crossbow", name: "Crossbow", trait: "finesse", range: "Far", damage: "d6+1", type: "phy", burden: 1, feature: "" },
+  { id: "longbow", name: "Longbow", trait: "agility", range: "Very Far", damage: "d8+3", type: "phy", burden: 2, feature: "Cumbersome: −1 to Finesse", traitMod: { finesse: -1 } },
+  // Tier 1 magic primary weapons (require a Spellcast trait)
+  { id: "arcane-gauntlets", name: "Arcane Gauntlets", trait: "strength", range: "Melee", damage: "d10+3", type: "mag", burden: 2, feature: "" },
+  { id: "hallowed-axe", name: "Hallowed Axe", trait: "strength", range: "Melee", damage: "d8+1", type: "mag", burden: 1, feature: "" },
+  { id: "glowing-rings", name: "Glowing Rings", trait: "agility", range: "Very Close", damage: "d10+1", type: "mag", burden: 2, feature: "" },
+  { id: "hand-runes", name: "Hand Runes", trait: "instinct", range: "Very Close", damage: "d10", type: "mag", burden: 1, feature: "" },
+  { id: "returning-blade", name: "Returning Blade", trait: "finesse", range: "Close", damage: "d8", type: "mag", burden: 1, feature: "Returning: When this weapon is thrown within its range, it appears in your hand immediately after the attack." },
+  { id: "shortstaff", name: "Shortstaff", trait: "instinct", range: "Close", damage: "d8+1", type: "mag", burden: 1, feature: "" },
+  { id: "dualstaff", name: "Dualstaff", trait: "instinct", range: "Far", damage: "d6+3", type: "mag", burden: 2, feature: "" },
+  { id: "scepter", name: "Scepter", trait: "presence", range: "Far", damage: "d6", type: "mag", burden: 2, feature: "Versatile: This weapon can also be used with these statistics — Presence, Melee, d8." },
+  { id: "wand", name: "Wand", trait: "knowledge", range: "Far", damage: "d6+1", type: "mag", burden: 1, feature: "" },
+  { id: "greatstaff", name: "Greatstaff", trait: "knowledge", range: "Very Far", damage: "d6", type: "mag", burden: 2, feature: "Powerful: On a successful attack, roll an additional damage die and discard the lowest result." },
+  { id: "arcane-wheelchair", name: "Arcane-Frame Wheelchair", trait: "spellcast", range: "Far", damage: "d6", type: "mag", burden: 1, feature: "Reliable: +1 to attack rolls. Attuned to you; attacks use your subclass's Spellcast trait." }
+];
+
+// Tier 1 secondary weapons
+SRD.secondaryWeapons = [
+  { id: "shortsword", name: "Shortsword", trait: "agility", range: "Melee", damage: "d8", type: "phy", burden: 1, feature: "Paired: +2 to primary weapon damage to targets within Melee range" },
+  { id: "round-shield", name: "Round Shield", trait: "strength", range: "Melee", damage: "d4", type: "phy", burden: 1, feature: "Protective: +1 to Armor Score", armorMod: 1 },
+  { id: "tower-shield", name: "Tower Shield", trait: "strength", range: "Melee", damage: "d6", type: "phy", burden: 1, feature: "Barrier: +2 to Armor Score; −1 to Evasion", armorMod: 2, evasionMod: -1 },
+  { id: "small-dagger", name: "Small Dagger", trait: "finesse", range: "Melee", damage: "d8", type: "phy", burden: 1, feature: "Paired: +2 to primary weapon damage to targets within Melee range" },
+  { id: "whip", name: "Whip", trait: "presence", range: "Very Close", damage: "d6", type: "phy", burden: 1, feature: "Startling: Mark a Stress to crack the whip and force all adversaries within Melee range back to Close range." },
+  { id: "grappler", name: "Grappler", trait: "finesse", range: "Close", damage: "d6", type: "phy", burden: 1, feature: "Hooked: On a successful attack, you can pull the target into Melee range." },
+  { id: "hand-crossbow", name: "Hand Crossbow", trait: "finesse", range: "Far", damage: "d6+1", type: "phy", burden: 1, feature: "" }
+];
+
+// Tier 1 armor. Base thresholds are major/severe BEFORE adding level.
+SRD.armor = [
+  { id: "gambeson", name: "Gambeson Armor", major: 5, severe: 11, score: 3, feature: "Flexible: +1 to Evasion", evasionMod: 1 },
+  { id: "leather", name: "Leather Armor", major: 6, severe: 13, score: 3, feature: "" },
+  { id: "chainmail", name: "Chainmail Armor", major: 7, severe: 15, score: 4, feature: "Heavy: −1 to Evasion", evasionMod: -1 },
+  { id: "full-plate", name: "Full Plate Armor", major: 8, severe: 17, score: 4, feature: "Very Heavy: −2 to Evasion; −1 to Agility", evasionMod: -2, traitMod: { agility: -1 } },
+  { id: "unarmored", name: "Unarmored", major: null, severe: null, score: 0, feature: "While unarmored, your base Armor Score is 0, your Major threshold equals your level, and your Severe threshold equals twice your level." }
+];
+
+// All level-1 domain cards
+SRD.domainCards = [
+  { id: "rune-ward", domain: "arcana", name: "Rune Ward", level: 1, type: "Spell", recall: 0,
+    text: "You have a deeply personal trinket that can be infused with protective magic and held as a ward by you or an ally. Describe what it is and why it's important to you. The ward's holder can spend a Hope to reduce incoming damage by 1d8. If the Ward Die result is 8, the ward's power ends after it reduces damage this turn. It can be recharged for free on your next rest." },
+  { id: "unleash-chaos", domain: "arcana", name: "Unleash Chaos", level: 1, type: "Spell", recall: 1,
+    text: "At the beginning of a session, place a number of tokens equal to your Spellcast trait on this card. Make a Spellcast Roll against a target within Far range and spend any number of tokens to channel raw energy from within yourself to unleash against them. On a success, roll a number of d10s equal to the tokens you spent and deal that much magic damage to the target. Mark a Stress to replenish this card with tokens (up to your Spellcast trait). At the end of each session, clear all unspent tokens." },
+  { id: "wall-walk", domain: "arcana", name: "Wall Walk", level: 1, type: "Spell", recall: 1,
+    text: "Spend a Hope to allow a creature you can touch to climb on walls and ceilings as easily as walking on the ground. This lasts until the end of the scene or you cast Wall Walk again." },
+  { id: "get-back-up", domain: "blade", name: "Get Back Up", level: 1, type: "Ability", recall: 1,
+    text: "When you take Severe damage, you can mark a Stress to reduce the severity by one threshold." },
+  { id: "not-good-enough", domain: "blade", name: "Not Good Enough", level: 1, type: "Ability", recall: 1,
+    text: "When you roll your damage dice, you can reroll any 1s or 2s." },
+  { id: "whirlwind", domain: "blade", name: "Whirlwind", level: 1, type: "Ability", recall: 0,
+    text: "When you make a successful attack against a target within Very Close range, you can spend a Hope to use the attack against all other targets within Very Close range. All additional adversaries you succeed against with this ability take half damage." },
+  { id: "deft-maneuvers", domain: "bone", name: "Deft Maneuvers", level: 1, type: "Ability", recall: 0,
+    text: "Once per rest, mark a Stress to sprint anywhere within Far range without making an Agility Roll to get there. If you end this movement within Melee range of an adversary and immediately make an attack against them, gain a +1 bonus to the attack roll." },
+  { id: "i-see-it-coming", domain: "bone", name: "I See It Coming", level: 1, type: "Ability", recall: 1,
+    text: "When you're targeted by an attack made from beyond Melee range, you can mark a Stress to roll a d4 and gain a bonus to your Evasion equal to the result against the attack." },
+  { id: "untouchable", domain: "bone", name: "Untouchable", level: 1, type: "Ability", recall: 1,
+    text: "Gain a bonus to your Evasion equal to half your Agility." },
+  { id: "book-of-ava", domain: "codex", name: "Book of Ava", level: 1, type: "Grimoire", recall: 2,
+    text: "Power Push: Make a Spellcast Roll against a target within Melee range. On a success, they're knocked back to Far range and take d10+2 magic damage using your Proficiency. — Tava's Armor: Spend a Hope to give a target you can touch a +1 bonus to their Armor Score until their next rest or you cast Tava's Armor again. — Ice Spike: Make a Spellcast Roll (12) to summon a large ice spike within Far range. If you use it as a weapon, make the Spellcast Roll against the target's Difficulty instead. On a success, deal d6 physical damage using your Proficiency." },
+  { id: "book-of-illiat", domain: "codex", name: "Book of Illiat", level: 1, type: "Grimoire", recall: 2,
+    text: "Slumber: Make a Spellcast Roll against a target within Very Close range. On a success, they're Asleep until they take damage or the GM spends a Fear on their turn to clear this condition. — Arcane Barrage: Once per rest, spend any number of Hope and shoot magical projectiles that strike a target of your choice within Close range. Roll a number of d6s equal to the Hope spent and deal that much magic damage to the target. — Telepathy: Spend a Hope to open a line of mental communication with one target you can see. This connection lasts until your next rest or you cast Telepathy again." },
+  { id: "book-of-tyfar", domain: "codex", name: "Book of Tyfar", level: 1, type: "Grimoire", recall: 2,
+    text: "Wild Flame: Make a Spellcast Roll against up to three adversaries within Melee range. Targets you succeed against take 2d6 magic damage and must mark a Stress as flames erupt from your hand. — Magic Hand: You conjure a magical hand with the same size and strength as your own within Far range. — Mysterious Mist: Make a Spellcast Roll (13) to cast a temporary thick fog that gathers in a stationary area within Very Close range. The fog heavily obscures this area and everything in it." },
+  { id: "deft-deceiver", domain: "grace", name: "Deft Deceiver", level: 1, type: "Ability", recall: 0,
+    text: "Spend a Hope to gain advantage on a roll to deceive or trick someone into believing a lie you tell them." },
+  { id: "enrapture", domain: "grace", name: "Enrapture", level: 1, type: "Spell", recall: 0,
+    text: "Make a Spellcast Roll against a target within Close range. On a success, they become temporarily Enraptured. While Enraptured, a target's attention is fixed on you, narrowing their field of view and drowning out any sound but your voice. Once per rest on a success, you can mark a Stress to force the Enraptured target to mark a Stress as well." },
+  { id: "inspirational-words", domain: "grace", name: "Inspirational Words", level: 1, type: "Ability", recall: 1,
+    text: "Your speech is imbued with power. After a long rest, place a number of tokens on this card equal to your Presence. When you speak with an ally, you can spend a token from this card to give them one benefit from the following options: your ally clears a Stress; your ally clears a Hit Point; your ally gains a Hope. When you take a long rest, clear all unspent tokens." },
+  { id: "pick-and-pull", domain: "midnight", name: "Pick and Pull", level: 1, type: "Ability", recall: 0,
+    text: "You have advantage on action rolls to pick nonmagical locks, disarm nonmagical traps, or steal items from a target (either through stealth or by force)." },
+  { id: "rain-of-blades", domain: "midnight", name: "Rain of Blades", level: 1, type: "Spell", recall: 1,
+    text: "Spend a Hope to make a Spellcast Roll and conjure throwing blades that strike out at all targets within Very Close range. Targets you succeed against take d8+2 magic damage using your Proficiency. If a target you hit is Vulnerable, they take an extra 1d8 damage." },
+  { id: "uncanny-disguise", domain: "midnight", name: "Uncanny Disguise", level: 1, type: "Spell", recall: 0,
+    text: "When you have a few minutes to prepare, you can mark a Stress to don the facade of any humanoid you can picture clearly in your mind. While disguised, you have advantage on Presence Rolls to avoid scrutiny. Place a number of tokens equal to your Spellcast trait on this card. When you take an action while disguised, spend a token from this card. After the action that spends the last token is resolved, the disguise drops." },
+  { id: "gifted-tracker", domain: "sage", name: "Gifted Tracker", level: 1, type: "Ability", recall: 0,
+    text: "When you're tracking a specific creature or group of creatures based on signs of their passage, you can spend any number of Hope and ask the GM that many questions from the following list: What direction did they go? How long ago did they pass through? What were they doing in this location? How many of them were here? When you encounter creatures you've tracked in this way, gain a +1 bonus to your Evasion against them." },
+  { id: "natures-tongue", domain: "sage", name: "Nature's Tongue", level: 1, type: "Ability", recall: 0,
+    text: "You can speak the language of the natural world. When you want to speak to the plants and animals around you, make an Instinct Roll (12). On a success, they'll give you the information they know. On a roll with Fear, their knowledge might be limited or come at a cost. Additionally, before you make a Spellcast Roll while within a natural environment, you can spend a Hope to gain a +2 bonus to the roll." },
+  { id: "vicious-entangle", domain: "sage", name: "Vicious Entangle", level: 1, type: "Spell", recall: 1,
+    text: "Make a Spellcast Roll against a target within Far range. On a success, roots and vines reach out from the ground, dealing 1d8+1 physical damage and temporarily Restraining the target. Additionally on a success, you can spend a Hope to temporarily Restrain another adversary within Very Close range of your target." },
+  { id: "bolt-beacon", domain: "splendor", name: "Bolt Beacon", level: 1, type: "Spell", recall: 1,
+    text: "Make a Spellcast Roll against a target within Far range. On a success, spend a Hope to send a bolt of shimmering light toward them, dealing d8+2 magic damage using your Proficiency. The target becomes temporarily Vulnerable and glows brightly until this condition is cleared." },
+  { id: "mending-touch", domain: "splendor", name: "Mending Touch", level: 1, type: "Spell", recall: 1,
+    text: "You lay your hands upon a creature and channel healing magic to close their wounds. When you can take a few minutes to focus on the target you're helping, you can spend 2 Hope to clear a Hit Point or a Stress on them. Once per long rest, when you spend this healing time learning something new about them or revealing something about yourself, you can clear 2 Hit Points or 2 Stress on them instead." },
+  { id: "reassurance", domain: "splendor", name: "Reassurance", level: 1, type: "Ability", recall: 0,
+    text: "Once per rest, after an ally attempts an action roll but before the consequences take place, you can offer assistance or words of support. When you do, your ally can reroll their dice." },
+  { id: "bare-bones", domain: "valor", name: "Bare Bones", level: 1, type: "Ability", recall: 0,
+    text: "When you choose not to equip armor, you have a base Armor Score of 3 + your Strength and use the following as your base damage thresholds: Tier 1: 9/19; Tier 2: 11/24; Tier 3: 13/31; Tier 4: 15/38." },
+  { id: "forceful-push", domain: "valor", name: "Forceful Push", level: 1, type: "Ability", recall: 0,
+    text: "Make an attack with your primary weapon against a target within Melee range. On a success, you deal damage and knock them back to Close range. On a success with Hope, add a d6 to your damage roll. Additionally, you can spend a Hope to make them temporarily Vulnerable." },
+  { id: "i-am-your-shield", domain: "valor", name: "I Am Your Shield", level: 1, type: "Ability", recall: 1,
+    text: "When an ally within Very Close range would take damage, you can mark a Stress to stand in the way and make yourself the target of the attack instead. When you take damage from this attack, you can mark any number of Armor Slots." }
+];
+
+// Leveling structure (reference for the level-up helper)
+SRD.leveling = {
+  tiers: [
+    { tier: 1, levels: "1", label: "Tier 1 (Level 1)" },
+    { tier: 2, levels: "2–4", label: "Tier 2 (Levels 2–4)" },
+    { tier: 3, levels: "5–7", label: "Tier 3 (Levels 5–7)" },
+    { tier: 4, levels: "8–10", label: "Tier 4 (Levels 8–10)" }
+  ],
+  tierAchievements: {
+    2: "Gain a new Experience at +2 and permanently increase your Proficiency by 1.",
+    5: "Gain a new Experience at +2, permanently increase your Proficiency by 1, and clear any marked traits.",
+    8: "Gain a new Experience at +2, permanently increase your Proficiency by 1, and clear any marked traits."
+  },
+  steps: [
+    "Take any applicable tier achievements (levels 2, 5, and 8).",
+    "Choose any two advancements with at least one unmarked slot from your tier or below.",
+    "Increase all damage thresholds by 1.",
+    "Acquire a new domain card at your level or lower from one of your class's domains."
+  ],
+  advancementOptions: [
+    "Increase two unmarked character traits by +1 and mark them.",
+    "Permanently add 1 Hit Point slot.",
+    "Permanently add 1 Stress slot.",
+    "Increase an Experience by +1.",
+    "Take an additional domain card.",
+    "Increase your Evasion by +1.",
+    "Take an upgraded subclass card (specialization, then mastery).",
+    "Increase your Proficiency by 1 (costs both advancement slots).",
+    "Multiclass: choose an additional class, one of its domains, its class feature, and a foundation card (tier 3+; costs both slots)."
+  ]
+};
+
+// Quick rules reference (paraphrased summaries of SRD core mechanics)
+SRD.rulesReference = [
+  { name: "Action Rolls & the Duality Dice", text: "Roll 2d12 (Hope Die + Fear Die), add your trait modifier and any bonuses, and compare to the Difficulty. Meet or beat it with Hope higher: Success with Hope (gain a Hope). Fear higher: Success with Fear (GM gains a Fear). Failures work the same way — fail with Hope gains you a Hope; fail with Fear gives the GM a Fear and a major consequence. Matching dice: Critical Success — succeed with a bonus, gain a Hope, and clear a Stress." },
+  { name: "Hope", text: "Start with 2, maximum 6. Spend it to: Help an Ally (roll a d6 advantage die for them), Utilize an Experience (+its modifier), initiate a Tag Team Roll (3 Hope), or activate your class's Hope Feature (3 Hope)." },
+  { name: "Damage & Thresholds", text: "When you take damage, compare it to your thresholds: below Major = mark 1 HP; at or above Major = mark 2 HP; at or above Severe = mark 3 HP. You can mark one Armor Slot to reduce the Hit Points marked by one. Damage thresholds = armor base thresholds + your level (+ any bonuses)." },
+  { name: "Stress", text: "You have 6 Stress slots (plus bonuses). Many features cost Stress; some effects force you to mark it. If you must mark Stress but can't, you mark a Hit Point instead. While your Stress is full you can't use anything that requires marking Stress." },
+  { name: "Advantage & Disadvantage", text: "Advantage: roll a d6 with your dice pool and add it. Disadvantage: roll a d6 and subtract it. They cancel one-for-one." },
+  { name: "Attacking", text: "Attack rolls are action rolls using your weapon's trait against the target's Difficulty (adversaries) — adversaries attack against your Evasion. On a success, roll a number of weapon damage dice equal to your Proficiency and add the weapon's flat modifier. Critical successes deal maximum damage plus a normal roll." },
+  { name: "Group & Tag Team", text: "Group action: the leader rolls with +1 per succeeding helper reaction roll, −1 per failure. Tag Team (3 Hope, once per session per player): two PCs roll and choose one result to apply to both actions; damage is combined." },
+  { name: "Rests", text: "During a rest, choose downtime moves (clear HP, clear Stress, repair armor, prepare). You can also freely swap domain cards between loadout and vault at the start of a rest — otherwise moving a vault card costs Stress equal to its Recall Cost." }
+];
+
+// ===================== Heartforge app =====================
+"use strict";
+
+// ---------- utilities ----------
+const $ = (s, el) => (el || document).querySelector(s);
+const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const byId = (arr, id) => arr.find(x => x.id === id) || null;
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+const fmtMod = n => (n >= 0 ? "+" + n : String(n));
+const uid = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+const d = sides => 1 + Math.floor(Math.random() * sides);
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// ---------- persistence ----------
+const LS_KEY = "heartforge.v1";
+const Store = {
+  data: { characters: {}, order: [], currentId: null, settings: { theme: null } },
+  load() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) { const p = JSON.parse(raw); if (p && p.characters) this.data = Object.assign(this.data, p); }
+    } catch (e) { console.warn("load failed", e); }
+  },
+  save() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(this.data)); }
+    catch (e) { toast("Save failed — storage may be full"); }
+  }
+};
+
+// ---------- character model ----------
+function newCharacter(name) {
+  return {
+    schemaVersion: "1.0", app: "heartforge", id: uid(),
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    identity: { name: name || "", pronouns: "", player: "", campaign: "", concept: "", description: "" },
+    build: { level: 1, classId: null, subclassId: null, ancestryId: null, mixed: false, ancestry2Id: null, communityId: null },
+    traits: { agility: null, strength: null, finesse: null, instinct: null, presence: null, knowledge: null },
+    equipment: { primaryId: null, secondaryId: null, armorId: "leather", potion: null, classItem: "", inventory: "A torch, 50 feet of rope, basic supplies" },
+    experiences: [{ name: "", mod: 2 }, { name: "", mod: 2 }],
+    cards: [],
+    background: ["", "", ""],
+    connections: ["", "", ""],
+    resources: { hpMarked: 0, stressMarked: 0, hope: 2, armorMarked: 0, gold: { handfuls: 1, bags: 0, chest: 0 } },
+    adjustments: { evasion: 0, hpSlots: 0, stressSlots: 0, armorScore: 0, major: 0, severe: 0, proficiency: 0, note: "" },
+    notes: { public: "", session: "" }
+  };
+}
+
+// migrate/sanitize an imported object into a safe character
+function sanitizeCharacter(raw) {
+  if (!raw || typeof raw !== "object") throw new Error("Not a character object");
+  const base = newCharacter();
+  const merge = (dst, src) => {
+    for (const k of Object.keys(dst)) {
+      if (src == null || !(k in src)) continue;
+      const dv = dst[k], sv = src[k];
+      if (dv !== null && typeof dv === "object" && !Array.isArray(dv)) merge(dv, sv);
+      else if (Array.isArray(dv)) { if (Array.isArray(sv)) dst[k] = JSON.parse(JSON.stringify(sv)); }
+      else if (typeof dv === "number") { const n = Number(sv); if (!isNaN(n)) dst[k] = n; }
+      else if (typeof dv === "boolean") dst[k] = !!sv;
+      else dst[k] = sv == null ? dv : String(sv);
+    }
+  };
+  merge(base, raw);
+  // null-able ids
+  for (const k of ["classId", "subclassId", "ancestryId", "ancestry2Id", "communityId"]) base.build[k] = raw.build && raw.build[k] ? String(raw.build[k]) : null;
+  for (const k of ["primaryId", "secondaryId", "armorId", "potion"]) base.equipment[k] = raw.equipment && raw.equipment[k] ? String(raw.equipment[k]) : null;
+  for (const t of Object.keys(base.traits)) { const v = raw.traits ? raw.traits[t] : null; base.traits[t] = (v === 0 || v) && !isNaN(Number(v)) ? Number(v) : null; }
+  base.build.level = clamp(Number(base.build.level) || 1, 1, 10);
+  base.id = raw.id ? String(raw.id) : uid();
+  return base;
+}
+
+// ---------- rules / derivation ----------
+function getClass(c) { return byId(SRD.classes, c.build.classId); }
+function getSubclass(c) { const cls = getClass(c); return cls ? byId(cls.subclasses, c.build.subclassId) : null; }
+function getAncestry(c) { return byId(SRD.ancestries, c.build.ancestryId); }
+function getAncestry2(c) { return byId(SRD.ancestries, c.build.ancestry2Id); }
+function getCommunity(c) { return byId(SRD.communities, c.build.communityId); }
+function getPrimary(c) { return byId(SRD.primaryWeapons, c.equipment.primaryId); }
+function getSecondary(c) { return byId(SRD.secondaryWeapons, c.equipment.secondaryId); }
+function getArmor(c) { return byId(SRD.armor, c.equipment.armorId); }
+function tierOf(level) { return level <= 1 ? 1 : level <= 4 ? 2 : level <= 7 ? 3 : 4; }
+
+// ancestry features in play: first from ancestryId, second from ancestry2Id (mixed) or same ancestry
+function ancestryFeatures(c) {
+  const a1 = getAncestry(c); if (!a1) return [];
+  const a2 = c.build.mixed && getAncestry2(c) ? getAncestry2(c) : a1;
+  const out = [];
+  if (a1.features[0]) out.push(Object.assign({ from: a1.name }, a1.features[0]));
+  if (a2.features[1]) out.push(Object.assign({ from: a2.name }, a2.features[1]));
+  return out;
+}
+function hasAncestryFeature(c, name) { return ancestryFeatures(c).some(f => f.name === name); }
+function hasFoundation(c, name) { const sc = getSubclass(c); return !!sc && sc.foundations.some(f => f.name === name); }
+
+function maxCards(c) { return 2 + (hasFoundation(c, "Prepared") ? 1 : 0); }
+
+function derive(c) {
+  const cls = getClass(c), armor = getArmor(c), pri = getPrimary(c), sec = getSecondary(c);
+  const adj = c.adjustments, lvl = c.build.level;
+  let evasion = (cls ? cls.evasion : 0), armorScore = 0, major = null, severe = null;
+  let hpSlots = (cls ? cls.hp : 0) + adj.hpSlots, stressSlots = SRD.meta.stressSlots + adj.stressSlots;
+  if (armor) {
+    armorScore = armor.score;
+    if (armor.evasionMod) evasion += armor.evasionMod;
+    if (armor.major != null) { major = armor.major + lvl; severe = armor.severe + lvl; }
+    else { major = lvl; severe = 2 * lvl; }
+  } else { major = lvl; severe = 2 * lvl; }
+  if (pri && pri.evasionMod) evasion += pri.evasionMod;
+  if (sec) { if (sec.evasionMod) evasion += sec.evasionMod; if (sec.armorMod) armorScore += sec.armorMod; }
+  if (hasAncestryFeature(c, "Nimble")) evasion += 1;            // Simiah
+  if (hasAncestryFeature(c, "Endurance")) hpSlots += 1;         // Giant
+  if (hasAncestryFeature(c, "High Stamina")) stressSlots += 1;  // Human
+  if (hasFoundation(c, "At Ease")) stressSlots += 1;            // Guardian: Vengeance
+  if (hasFoundation(c, "Battlemage")) hpSlots += 1;             // Wizard: School of War
+  if (hasFoundation(c, "Unwavering")) { major += 1; severe += 1; } // Guardian: Stalwart
+  evasion += adj.evasion; armorScore += adj.armorScore;
+  major += adj.major; severe += adj.severe;
+  const proficiency = SRD.meta.startingProficiency + (lvl >= 8 ? 3 : lvl >= 5 ? 2 : lvl >= 2 ? 1 : 0) + adj.proficiency;
+  return { evasion, armorScore, major, severe, hpSlots, stressSlots, proficiency };
+}
+
+// ---------- validation ----------
+function validate(c) {
+  const errs = [], warns = [];
+  const cls = getClass(c), sc = getSubclass(c);
+  if (!cls) errs.push("Choose a class (Step 1).");
+  if (cls && !sc) errs.push("Choose a subclass (Step 1).");
+  if (!getAncestry(c)) errs.push("Choose an ancestry (Step 2).");
+  if (c.build.mixed && !getAncestry2(c)) errs.push("Mixed ancestry: choose a second ancestry (Step 2).");
+  if (!getCommunity(c)) errs.push("Choose a community (Step 2).");
+  // traits: must be exactly the array +2 +1 +1 0 0 -1
+  const vals = Object.values(c.traits);
+  if (vals.some(v => v === null)) errs.push("Assign all six traits (Step 3).");
+  else {
+    const need = SRD.meta.traitArray.slice().sort((a, b) => a - b).join(",");
+    const got = vals.slice().sort((a, b) => a - b).join(",");
+    if (need !== got) errs.push("Traits must use exactly +2, +1, +1, +0, +0, −1 (Step 3).");
+  }
+  const pri = getPrimary(c), sec = getSecondary(c);
+  if (!pri) errs.push("Choose a primary weapon (Step 4).");
+  if (pri && pri.burden === 2 && sec) errs.push("A two-handed primary weapon leaves no hand for a secondary weapon (Step 4).");
+  const spellTrait = sc ? sc.spellcastTrait : null;
+  if (pri && pri.type === "mag" && !spellTrait) errs.push("Magic weapons require a Spellcast trait — your subclass has none (Step 4).");
+  if (!getArmor(c)) warns.push("No armor equipped — your thresholds will be low (Step 4).");
+  if (!c.equipment.potion) warns.push("Pick your free potion (Step 4).");
+  const exps = c.experiences.filter(e => e.name.trim());
+  if (exps.length < 2) errs.push("Create two Experiences (Step 6).");
+  const nCards = c.cards.length, want = maxCards(c);
+  if (cls) {
+    if (nCards < want) errs.push(`Choose ${want} domain cards — you have ${nCards} (Step 7).`);
+    if (nCards > want) errs.push(`Too many domain cards — maximum ${want} at level 1 (Step 7).`);
+    const okDomains = cls.domains;
+    if (c.cards.some(id => { const card = byId(SRD.domainCards, id); return !card || !okDomains.includes(card.domain); }))
+      errs.push("One of your domain cards is outside your class's domains (Step 7).");
+  }
+  if (!c.identity.name.trim()) warns.push("Your hero has no name yet (Step 5).");
+  if (!c.connections.some(x => x.trim())) warns.push("No connections recorded (Step 8).");
+  return { errs, warns };
+}
+
+// ---------- app state ----------
+const App = {
+  tab: "build", step: 0, diceLog: [],
+  get char() { return Store.data.characters[Store.data.currentId] || null; }
+};
+const TABS = [["build", "Build"], ["sheet", "Sheet"], ["reference", "Reference"], ["chars", "Characters"]];
+const STEPS = ["Class", "Heritage", "Traits", "Equipment", "Details", "Experiences", "Domain Cards", "Connections", "Review"];
+
+function touch() { const c = App.char; if (c) c.updatedAt = new Date().toISOString(); Store.save(); render(); }
+
+// generic setter used by inline handlers: App.set('identity.name', value)
+App.set = function (path, value) {
+  const c = App.char; if (!c) return;
+  const keys = path.split("."); let o = c;
+  for (let i = 0; i < keys.length - 1; i++) o = o[keys[i]];
+  const last = keys[keys.length - 1];
+  const cur = o[last];
+  if (typeof cur === "number" || path.startsWith("adjustments.") || path === "build.level") {
+    const n = Number(value); o[last] = isNaN(n) ? 0 : n;
+  } else o[last] = value;
+  if (path === "build.level") o[last] = clamp(o[last], 1, 10);
+  touch();
+};
+App.setNullable = function (path, value) {
+  const c = App.char; if (!c) return;
+  const keys = path.split("."); let o = c;
+  for (let i = 0; i < keys.length - 1; i++) o = o[keys[i]];
+  o[keys[keys.length - 1]] = value || null;
+  if (path === "build.classId") { c.build.subclassId = null; c.cards = []; }
+  touch();
+};
+
+// ---------- render root ----------
+function render() {
+  renderHeader();
+  const c = App.char, root = $("#app");
+  if (!c) {
+    root.innerHTML = `<div class="panel" style="text-align:center;padding:3em 1em">
+      <h1>Forge your first hero</h1>
+      <p class="muted">A guided character builder compatible with Daggerheart™. Everything stays in your browser.</p>
+      <p><button class="primary" onclick="App.newChar()">+ Create a character</button>
+         <button onclick="App.importChar()">Import JSON</button></p></div>`;
+    return;
+  }
+  if (App.tab === "build") root.innerHTML = viewBuild(c);
+  else if (App.tab === "sheet") root.innerHTML = viewSheet(c);
+  else if (App.tab === "reference") root.innerHTML = viewReference();
+  else root.innerHTML = viewChars();
+}
+
+function renderHeader() {
+  const sel = $("#charSelect");
+  sel.innerHTML = Store.data.order.map(id => {
+    const ch = Store.data.characters[id];
+    return `<option value="${esc(id)}" ${id === Store.data.currentId ? "selected" : ""}>${esc(ch.identity.name || "Unnamed hero")}</option>`;
+  }).join("") || `<option value="">— no characters —</option>`;
+  $("#tabs").innerHTML = TABS.map(([id, label]) =>
+    `<button role="tab" aria-selected="${App.tab === id}" onclick="App.go('${id}')">${label}</button>`).join("");
+}
+
+App.go = t => { App.tab = t; render(); window.scrollTo(0, 0); };
+App.goStep = i => { App.step = i; App.tab = "build"; render(); window.scrollTo(0, 0); };
+
+// ---------- build wizard ----------
+function stepStatus(c, i) {
+  const v = validate(c);
+  const has = kw => v.errs.some(e => e.includes(kw));
+  switch (i) {
+    case 0: return !c.build.classId || !c.build.subclassId ? "todo" : "done";
+    case 1: return has("Step 2") ? "todo" : (c.build.ancestryId && c.build.communityId ? "done" : "todo");
+    case 2: return has("Step 3") ? "todo" : "done";
+    case 3: return has("Step 4") ? "todo" : "done";
+    case 4: return c.identity.name.trim() ? "done" : "todo";
+    case 5: return has("Step 6") ? "todo" : "done";
+    case 6: return has("Step 7") ? "todo" : "done";
+    case 7: return c.connections.some(x => x.trim()) ? "done" : "todo";
+    default: return "";
+  }
+}
+function viewBuild(c) {
+  const stepsNav = STEPS.map((s, i) => {
+    const st = i === App.step ? "cur" : stepStatus(c, i) === "done" ? "done" : "";
+    return `<button class="${st}" onclick="App.goStep(${i})">${i + 1}. ${s}</button>`;
+  }).join("");
+  const body = [stepClass, stepHeritage, stepTraits, stepEquipment, stepDetails, stepExperiences, stepCards, stepConnections, stepReview][App.step](c);
+  const nav = `<div class="row no-print" style="justify-content:space-between;margin-top:1em">
+    <button ${App.step === 0 ? "disabled" : ""} onclick="App.goStep(${App.step - 1})">← ${STEPS[App.step - 1] || ""}</button>
+    <button class="primary" ${App.step === STEPS.length - 1 ? "disabled" : ""} onclick="App.goStep(${App.step + 1})">${App.step < STEPS.length - 1 ? "Next: " + STEPS[App.step + 1] + " →" : "Done"}</button></div>`;
+  return `<div class="steps" role="navigation" aria-label="Builder steps">${stepsNav}</div>
+    <div class="cols"><div>${body}${nav}</div><div>${miniSheet(c)}</div></div>`;
+}
+
+function stepClass(c) {
+  const cls = getClass(c);
+  const classCards = SRD.classes.map(k => `
+    <div class="opt ${c.build.classId === k.id ? "sel" : ""}" role="button" tabindex="0" onclick="App.setNullable('build.classId','${k.id}')" onkeydown="if(event.key==='Enter')this.click()">
+      <span class="tick">✓</span><h4>${k.name}</h4>
+      <p class="small muted">${esc(k.description)}</p>
+      <p class="small">${k.domains.map(dm => `<span class="chip">${cap(dm)}</span>`).join(" ")} <span class="chip">Evasion ${k.evasion}</span> <span class="chip">HP ${k.hp}</span></p>
+    </div>`).join("");
+  let subBlock = "";
+  if (cls) {
+    subBlock = `<h3>Subclass</h3><div class="optgrid">` + cls.subclasses.map(s => `
+      <div class="opt ${c.build.subclassId === s.id ? "sel" : ""}" role="button" tabindex="0" onclick="App.setNullable('build.subclassId','${s.id}')" onkeydown="if(event.key==='Enter')this.click()">
+        <span class="tick">✓</span><h4>${s.name}</h4>
+        <p class="small muted">${esc(s.description)}</p>
+        ${s.spellcastTrait ? `<p class="small"><span class="chip">Spellcast: ${cap(s.spellcastTrait)}</span></p>` : ""}
+        ${s.foundations.map(f => `<p class="small"><b>${esc(f.name)}:</b> ${esc(f.text)}</p>`).join("")}
+      </div>`).join("") + `</div>`;
+    subBlock += `<hr><h3>${cls.name} features</h3>
+      ${cls.classFeatures.map(f => `<div class="feat"><b>${esc(f.name)}</b><p class="small">${esc(f.text)}</p></div>`).join("")}
+      <div class="feat"><b>${esc(cls.hopeFeature.name)}</b> <span class="chip">Hope Feature — 3 Hope</span><p class="small">${esc(cls.hopeFeature.text)}</p></div>`;
+  }
+  return `<div class="panel"><h2>Step 1 — Choose a class & subclass</h2>
+    <p class="muted small">A class determines your domains, starting Evasion and Hit Points, class features, and Hope feature.</p>
+    <div class="optgrid">${classCards}</div>${subBlock ? "<hr>" + subBlock : ""}</div>`;
+}
+
+function stepHeritage(c) {
+  const ancCards = list => list.map(a => `
+    <div class="opt ${c.build.ancestryId === a.id ? "sel" : ""}" role="button" tabindex="0" onclick="App.setNullable('build.ancestryId','${a.id}')" onkeydown="if(event.key==='Enter')this.click()">
+      <span class="tick">✓</span><h4>${a.name}</h4><p class="small muted">${esc(a.blurb)}</p>
+      ${a.features.map((f, i) => `<p class="small"><b>${esc(f.name)}${c.build.mixed ? ` <span class="chip">${i === 0 ? "1st" : "2nd"}</span>` : ""}:</b> ${esc(f.text)}</p>`).join("")}
+    </div>`).join("");
+  const mixedBlock = c.build.mixed ? `
+    <p class="small muted">Mixed ancestry: you take the <b>first</b> feature from the ancestry selected above and the <b>second</b> feature from the one below.</p>
+    <label for="anc2">Second ancestry (grants its second-listed feature)</label>
+    <select id="anc2" onchange="App.setNullable('build.ancestry2Id',this.value)">
+      <option value="">— choose —</option>
+      ${SRD.ancestries.map(a => `<option value="${a.id}" ${c.build.ancestry2Id === a.id ? "selected" : ""}>${a.name} — ${esc(a.features[1].name)}</option>`).join("")}
+    </select>` : "";
+  const comCards = SRD.communities.map(k => `
+    <div class="opt ${c.build.communityId === k.id ? "sel" : ""}" role="button" tabindex="0" onclick="App.setNullable('build.communityId','${k.id}')" onkeydown="if(event.key==='Enter')this.click()">
+      <span class="tick">✓</span><h4>${k.name}</h4><p class="small muted">${esc(k.blurb)}</p>
+      <p class="small"><b>${esc(k.feature.name)}:</b> ${esc(k.feature.text)}</p>
+      <p class="small muted">Often: ${k.adjectives.join(", ")}</p>
+    </div>`).join("");
+  return `<div class="panel"><h2>Step 2 — Choose your heritage</h2>
+    <p class="muted small">Heritage combines an <b>ancestry</b> (two features) and a <b>community</b> (one feature).</p>
+    <h3>Ancestry</h3>
+    <p><label><input type="checkbox" ${c.build.mixed ? "checked" : ""} onchange="App.set('build.mixed',this.checked);"> Mixed ancestry</label></p>
+    ${mixedBlock}
+    <div class="optgrid">${ancCards(SRD.ancestries)}</div>
+    <hr><h3>Community</h3><div class="optgrid">${comCards}</div></div>`;
+}
+
+App.setTrait = function (trait, val) {
+  const c = App.char; c.traits[trait] = val === "" ? null : Number(val); touch();
+};
+App.randomTraits = function () {
+  const c = App.char, pool = SRD.meta.traitArray.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[pool[i], pool[j]] = [pool[j], pool[i]]; }
+  Object.keys(c.traits).forEach((t, i) => c.traits[t] = pool[i]);
+  touch();
+};
+function stepTraits(c) {
+  const counts = {};
+  Object.values(c.traits).forEach(v => { if (v !== null) counts[v] = (counts[v] || 0) + 1; });
+  const avail = {}; SRD.meta.traitArray.forEach(v => avail[v] = (avail[v] || 0) + 1);
+  const rows = SRD.meta.traits.map(t => {
+    const val = c.traits[t.id];
+    const opts = [...new Set(SRD.meta.traitArray)].map(v => {
+      const used = counts[v] || 0, allowed = avail[v] + ((val === v) ? 0 : 0);
+      const disable = used >= avail[v] && val !== v;
+      return `<option value="${v}" ${val === v ? "selected" : ""} ${disable ? "disabled" : ""}>${fmtMod(v)}</option>`;
+    }).join("");
+    return `<tr><td><b>${t.name}</b><br><span class="small muted">${t.verbs}</span></td>
+      <td><select aria-label="${t.name} modifier" onchange="App.setTrait('${t.id}',this.value)"><option value="">—</option>${opts}</select></td>
+      <td class="small muted">${esc(t.blurb)}</td></tr>`;
+  }).join("");
+  const v = validate(c);
+  const traitErr = v.errs.find(e => e.includes("Step 3"));
+  return `<div class="panel"><h2>Step 3 — Assign character traits</h2>
+    <p class="muted small">Assign the modifiers <b>+2, +1, +1, +0, +0, −1</b> to your six traits in any order. <button class="small" onclick="App.randomTraits()">🎲 Randomize</button></p>
+    <div class="tablewrap"><table>${rows}</table></div>
+    <p class="${traitErr ? "badge-err" : "badge-ok"} small">${traitErr ? esc(traitErr) : "✓ Trait array is legal."}</p></div>`;
+}
+
+function weaponRow(w, kind, selId) {
+  return `<tr>
+    <td><label style="margin:0"><input type="radio" name="${kind}" ${selId === w.id ? "checked" : ""} onchange="App.setNullable('equipment.${kind}Id','${w.id}')"> <b>${esc(w.name)}</b></label></td>
+    <td>${cap(w.trait)}</td><td>${w.range}</td><td>${w.damage} ${w.type}</td><td>${w.burden === 2 ? "Two-handed" : "One-handed"}</td>
+    <td class="small muted">${esc(w.feature || "—")}</td></tr>`;
+}
+App.clearSecondary = () => { App.char.equipment.secondaryId = null; touch(); };
+function stepEquipment(c) {
+  const sc = getSubclass(c), spell = sc && sc.spellcastTrait;
+  const pri = getPrimary(c);
+  const phys = SRD.primaryWeapons.filter(w => w.type === "phy");
+  const mags = SRD.primaryWeapons.filter(w => w.type === "mag");
+  const head = `<tr><th>Weapon</th><th>Trait</th><th>Range</th><th>Damage</th><th>Burden</th><th>Feature</th></tr>`;
+  const secDisabled = pri && pri.burden === 2;
+  return `<div class="panel"><h2>Step 4 — Choose your starting equipment</h2>
+    <p class="muted small">Take either a two-handed primary weapon, or a one-handed primary plus a one-handed secondary. Then equip one set of armor. At level 1 your Proficiency is 1 (you roll 1 damage die).</p>
+    <h3>Primary weapon — physical</h3>
+    <div class="tablewrap"><table>${head}${phys.map(w => weaponRow(w, "primary", c.equipment.primaryId)).join("")}</table></div>
+    <h3 style="margin-top:.8em">Primary weapon — magic ${spell ? `<span class="chip">your Spellcast trait: ${cap(spell)}</span>` : `<span class="chip" style="color:var(--warn)">requires a Spellcast trait — your subclass has none</span>`}</h3>
+    <div class="tablewrap"><table>${head}${mags.map(w => weaponRow(w, "primary", c.equipment.primaryId)).join("")}</table></div>
+    <h3 style="margin-top:.8em">Secondary weapon ${secDisabled ? `<span class="chip">unavailable — two-handed primary</span>` : ""}</h3>
+    ${secDisabled ? (c.equipment.secondaryId ? `<p class="badge-err small">Your primary is two-handed — <button class="small" onclick="App.clearSecondary()">unequip secondary</button></p>` : "") : ""}
+    <div class="tablewrap" ${secDisabled ? 'style="opacity:.5;pointer-events:none"' : ""}><table>${head}
+      <tr><td><label style="margin:0"><input type="radio" name="secondary" ${!c.equipment.secondaryId ? "checked" : ""} onchange="App.clearSecondary()"> <b>None</b></label></td><td colspan="5" class="muted small">Keep a free hand</td></tr>
+      ${SRD.secondaryWeapons.map(w => weaponRow(w, "secondary", c.equipment.secondaryId)).join("")}</table></div>
+    <h3 style="margin-top:.8em">Armor</h3>
+    <div class="tablewrap"><table><tr><th>Armor</th><th>Base thresholds</th><th>Base score</th><th>Feature</th></tr>
+      ${SRD.armor.map(a => `<tr><td><label style="margin:0"><input type="radio" name="armor" ${c.equipment.armorId === a.id ? "checked" : ""} onchange="App.setNullable('equipment.armorId','${a.id}')"> <b>${esc(a.name)}</b></label></td>
+        <td>${a.major != null ? a.major + " / " + a.severe + ' <span class="small muted">(+ level)</span>' : "level / 2×level"}</td><td>${a.score}</td><td class="small muted">${esc(a.feature || "—")}</td></tr>`).join("")}
+    </table></div>
+    <h3 style="margin-top:.8em">Starting inventory</h3>
+    <p class="small muted">${esc(SRD.meta.baseInventory)} — plus one free potion and a class item.</p>
+    <div class="grid2">
+      <div><label>Free potion</label><select onchange="App.setNullable('equipment.potion',this.value)">
+        <option value="">— choose —</option>
+        ${SRD.meta.potionChoice.map(p => `<option ${c.equipment.potion === p ? "selected" : ""}>${p}</option>`).join("")}</select></div>
+      <div><label>Class item ${getClass(c) ? `<span class="muted">(${esc(getClass(c).classItems)})</span>` : ""}</label>
+        <input type="text" value="${esc(c.equipment.classItem)}" onchange="App.set('equipment.classItem',this.value)" placeholder="e.g. a letter never opened"></div>
+    </div>
+    <label style="margin-top:.6em">Other inventory</label>
+    <textarea onchange="App.set('equipment.inventory',this.value)">${esc(c.equipment.inventory)}</textarea></div>`;
+}
+
+function stepDetails(c) {
+  const dv = derive(c);
+  return `<div class="panel"><h2>Step 5 — Character information</h2>
+    <div class="grid2">
+      <div><label>Character name</label><input type="text" value="${esc(c.identity.name)}" onchange="App.set('identity.name',this.value)"></div>
+      <div><label>Pronouns</label><input type="text" value="${esc(c.identity.pronouns)}" onchange="App.set('identity.pronouns',this.value)"></div>
+      <div><label>Player</label><input type="text" value="${esc(c.identity.player)}" onchange="App.set('identity.player',this.value)"></div>
+      <div><label>Campaign</label><input type="text" value="${esc(c.identity.campaign)}" onchange="App.set('identity.campaign',this.value)"></div>
+    </div>
+    <label style="margin-top:.6em">Concept (one line)</label>
+    <input type="text" style="width:100%" value="${esc(c.identity.concept)}" onchange="App.set('identity.concept',this.value)" placeholder="A runaway noble who talks to storms">
+    <label style="margin-top:.6em">Description</label>
+    <textarea onchange="App.set('identity.description',this.value)" placeholder="Appearance, demeanor, attire…">${esc(c.identity.description)}</textarea>
+    <hr><h3>Derived at level ${c.build.level}</h3>
+    <div class="stats">
+      <div class="statbox"><b>${dv.evasion}</b><span>Evasion</span></div>
+      <div class="statbox"><b>${dv.armorScore}</b><span>Armor score</span></div>
+      <div class="statbox"><b>${dv.major} / ${dv.severe}</b><span>Major / Severe</span></div>
+      <div class="statbox"><b>${dv.hpSlots}</b><span>HP slots</span></div>
+      <div class="statbox"><b>${dv.stressSlots}</b><span>Stress slots</span></div>
+      <div class="statbox"><b>${dv.proficiency}</b><span>Proficiency</span></div>
+    </div>
+    <hr><h3>Background questions</h3>
+    ${getClass(c) ? getClass(c).backgroundQuestions.map((q, i) => `
+      <label style="margin-top:.5em">${esc(q)}</label>
+      <textarea onchange="App.setArr('background',${i},this.value)">${esc(c.background[i] || "")}</textarea>`).join("")
+      : `<p class="muted small">Pick a class first to see its background questions.</p>`}
+  </div>`;
+}
+App.setArr = function (key, i, val) { App.char[key][i] = val; touch(); };
+
+App.setExp = function (i, field, val) {
+  const c = App.char;
+  if (!c.experiences[i]) c.experiences[i] = { name: "", mod: 2 };
+  c.experiences[i][field] = field === "mod" ? Number(val) || 0 : val;
+  touch();
+};
+App.addExp = function () { App.char.experiences.push({ name: "", mod: 2 }); touch(); };
+App.delExp = function (i) { App.char.experiences.splice(i, 1); touch(); };
+function expWarning(name) {
+  const broad = ["lucky", "highly skilled", "good at everything", "skilled", "invulnerable", "supersonic flight"];
+  return broad.some(b => name.trim().toLowerCase() === b) ? "This looks too broad or game-breaking — Experiences can't apply to virtually any roll or grant special abilities." : "";
+}
+function stepExperiences(c) {
+  const ex = SRD.meta.exampleExperiences;
+  return `<div class="panel"><h2>Step 6 — Create your Experiences</h2>
+    <p class="muted small">You get two Experiences at +2 — a word or phrase capturing skills or aptitudes from your character's life. Spend a Hope to add one to a relevant roll. They can't be too broad ("Lucky") or grant abilities ("Supersonic Flight").</p>
+    ${c.experiences.map((e, i) => {
+      const w = expWarning(e.name);
+      return `<div class="row" style="margin-bottom:.4em">
+        <input type="text" style="flex:1;min-width:180px" placeholder="e.g. Silver Tongue" value="${esc(e.name)}" onchange="App.setExp(${i},'name',this.value)">
+        <input type="number" style="width:4.5em" value="${e.mod}" min="0" max="6" aria-label="modifier" onchange="App.setExp(${i},'mod',this.value)">
+        ${c.experiences.length > 2 ? `<button class="small danger" onclick="App.delExp(${i})" aria-label="Remove experience">✕</button>` : ""}
+        ${w ? `<span class="badge-warn small" style="flex-basis:100%">${w}</span>` : ""}</div>`;
+    }).join("")}
+    <p><button class="small" onclick="App.addExp()">+ Add experience</button> <span class="muted small">(more become available as you level up)</span></p>
+    <details><summary>Example experiences</summary>
+      ${Object.entries(ex).map(([k, list]) => `<p class="small"><b>${k}:</b> <span class="muted">${list.join(", ")}</span></p>`).join("")}
+    </details></div>`;
+}
+
+App.toggleCard = function (id) {
+  const c = App.char, i = c.cards.indexOf(id);
+  if (i >= 0) c.cards.splice(i, 1);
+  else {
+    if (c.cards.length >= maxCards(c)) { toast(`Maximum ${maxCards(c)} domain cards at level 1`); return; }
+    c.cards.push(id);
+  }
+  touch();
+};
+function cardHtml(card, sel, clickable) {
+  return `<div class="dcard ${sel ? "opt sel" : "opt"}" ${clickable ? `role="button" tabindex="0" onclick="App.toggleCard('${card.id}')" onkeydown="if(event.key==='Enter')this.click()"` : ""} style="cursor:${clickable ? "pointer" : "default"}">
+    <span class="tick">✓</span>
+    <div class="top"><b>${esc(card.name)}</b><span class="chip">${cap(card.domain)}</span><span class="chip">Level ${card.level} ${card.type}</span><span class="chip">Recall ${card.recall}</span></div>
+    <p class="small">${esc(card.text)}</p></div>`;
+}
+function stepCards(c) {
+  const cls = getClass(c);
+  if (!cls) return `<div class="panel"><h2>Step 7 — Choose domain cards</h2><p class="muted">Pick a class first — domain access comes from your class.</p></div>`;
+  const want = maxCards(c);
+  const note = want === 3 ? `<p class="small badge-ok">School of Knowledge “Prepared”: you take an extra domain card (3 total).</p>` : "";
+  const groups = cls.domains.map(dm => {
+    const cards = SRD.domainCards.filter(k => k.domain === dm && k.level === 1);
+    return `<h3>${cap(dm)} <span class="muted small">${esc(byId(SRD.domains, dm).blurb)}</span></h3>` +
+      cards.map(k => cardHtml(k, c.cards.includes(k.id), true)).join("");
+  }).join("");
+  return `<div class="panel"><h2>Step 7 — Choose ${want} domain cards</h2>
+    <p class="muted small">Choose ${want} level-1 cards from your class's domains (${cls.domains.map(cap).join(" & ")}) — from either domain in any combination. Selected: <b>${c.cards.length}/${want}</b></p>
+    ${note}${groups}</div>`;
+}
+
+function stepConnections(c) {
+  const cls = getClass(c);
+  return `<div class="panel"><h2>Step 8 — Create connections</h2>
+    <p class="muted small">Connections are relationships between the PCs. Suggest at least one connection with each other player's character — everyone can accept or reject suggestions.</p>
+    ${cls ? `<p class="small"><b>Prompts for your fellow players (${cls.name}):</b></p><ul class="small muted">${cls.connections.map(q => `<li>${esc(q)}</li>`).join("")}</ul>` : ""}
+    ${c.connections.map((con, i) => `
+      <label style="margin-top:.5em">Connection ${i + 1}</label>
+      <textarea onchange="App.setArr('connections',${i},this.value)" placeholder="Who, and what binds you…">${esc(con)}</textarea>`).join("")}
+    <p><button class="small" onclick="App.char.connections.push('');touch()">+ Add connection</button></p></div>`;
+}
+
+function stepReview(c) {
+  const { errs, warns } = validate(c);
+  const ok = errs.length === 0;
+  return `<div class="panel"><h2>Step 9 — Review</h2>
+    <p class="${ok ? "badge-ok" : "badge-err"}"><b>${ok ? "✓ Your character is complete and legal!" : "Not finished yet — fix the items below."}</b></p>
+    ${errs.length ? `<ul class="validation">${errs.map(e => `<li class="badge-err">✕ ${esc(e)}</li>`).join("")}</ul>` : ""}
+    ${warns.length ? `<ul class="validation">${warns.map(w => `<li class="badge-warn">⚠ ${esc(w)}</li>`).join("")}</ul>` : ""}
+    ${ok ? `<p>Head to the <b>Sheet</b> tab to play, print, or export.</p>` : ""}
+    <div class="row"><button class="primary" onclick="App.go('sheet')">Open character sheet →</button>
+      <button onclick="App.exportChar()">Export JSON</button>
+      <button onclick="window.print()">Print</button></div></div>`;
+}
+
+// ---------- mini sheet (right column of builder) ----------
+function miniSheet(c) {
+  const cls = getClass(c), sc = getSubclass(c), dv = derive(c);
+  const anc = getAncestry(c), com = getCommunity(c);
+  const heritage = anc ? (c.build.mixed && getAncestry2(c) ? `${anc.name}-${getAncestry2(c).name}` : anc.name) : "—";
+  return `<div class="panel tight">
+    <h3 style="margin-bottom:.2em">${esc(c.identity.name || "Unnamed hero")}</h3>
+    <p class="small muted" style="margin-top:0">
+      Level ${c.build.level} ${heritage !== "—" ? esc(heritage) : ""} ${com ? esc(com.name) : ""} ${cls ? esc(cls.name) : "—"}${sc ? ` · ${esc(sc.name)}` : ""}</p>
+    <div class="stats">
+      <div class="statbox"><b>${dv.evasion}</b><span>Evasion</span></div>
+      <div class="statbox"><b>${dv.armorScore}</b><span>Armor</span></div>
+      <div class="statbox"><b>${dv.major}/${dv.severe}</b><span>Thresholds</span></div>
+      <div class="statbox"><b>${dv.proficiency}</b><span>Prof.</span></div>
+    </div>
+    <div class="traitgrid">
+      ${SRD.meta.traits.map(t => `<div class="statbox"><b>${c.traits[t.id] === null ? "—" : fmtMod(c.traits[t.id])}</b><span>${t.name}</span></div>`).join("")}
+    </div>
+    ${getPrimary(c) ? `<p class="small" style="margin-top:.6em"><b>${esc(getPrimary(c).name)}</b> — ${cap(getPrimary(c).trait)}, ${getPrimary(c).range}, ${dmgString(c, getPrimary(c))}</p>` : ""}
+    ${getSecondary(c) ? `<p class="small"><b>${esc(getSecondary(c).name)}</b> — ${getSecondary(c).range}, ${dmgString(c, getSecondary(c))}</p>` : ""}
+    ${c.cards.length ? `<p class="small"><b>Cards:</b> ${c.cards.map(id => { const k = byId(SRD.domainCards, id); return k ? esc(k.name) : ""; }).join(", ")}</p>` : ""}
+    ${c.experiences.filter(e => e.name.trim()).map(e => `<span class="chip">${esc(e.name)} ${fmtMod(e.mod)}</span>`).join(" ")}
+  </div>`;
+}
+function dmgString(c, w) {
+  const dv = derive(c);
+  const m = /^d(\d+)(?:\+(\d+))?$/.exec(w.damage);
+  if (!m) return w.damage + " " + w.type;
+  return `${dv.proficiency}d${m[1]}${m[2] ? "+" + m[2] : ""} ${w.type}`;
+}
+
+// ---------- sheet / play view ----------
+function pips(kind, marked, total, extraFrom) {
+  let out = "";
+  for (let i = 0; i < total; i++)
+    out += `<button class="pip ${kind} ${i < marked ? "on" : ""}" aria-label="${kind} ${i + 1} of ${total}${i < marked ? " marked" : ""}" onclick="App.mark('${kind}',${i})"></button>`;
+  return `<div class="pips">${out}</div>`;
+}
+App.mark = function (kind, i) {
+  const c = App.char, r = c.resources, dv = derive(c);
+  const map = { hp: ["hpMarked", dv.hpSlots], stress: ["stressMarked", dv.stressSlots], hope: ["hope", SRD.meta.maxHope], armor: ["armorMarked", dv.armorScore] };
+  const [field, max] = map[kind];
+  r[field] = (i < r[field]) ? i : i + 1;
+  r[field] = clamp(r[field], 0, max);
+  touch();
+};
+App.gold = function (kind, i) {
+  const g = App.char.resources.gold;
+  const max = { handfuls: 9, bags: 9, chest: 1 }[kind];
+  g[kind] = (i < g[kind]) ? i : i + 1; g[kind] = clamp(g[kind], 0, max);
+  touch();
+};
+
+function viewSheet(c) {
+  const cls = getClass(c), sc = getSubclass(c), dv = derive(c);
+  const anc = getAncestry(c), com = getCommunity(c);
+  const heritage = anc ? (c.build.mixed && getAncestry2(c) ? `${anc.name}-${getAncestry2(c).name}` : anc.name) : "—";
+  const { errs } = validate(c);
+  const feats = [];
+  if (cls) { cls.classFeatures.forEach(f => feats.push({ tag: cls.name, ...f })); feats.push({ tag: "Hope Feature — 3 Hope", ...cls.hopeFeature }); }
+  if (sc) sc.foundations.forEach(f => feats.push({ tag: sc.name, ...f }));
+  ancestryFeatures(c).forEach(f => feats.push({ tag: f.from, name: f.name, text: f.text }));
+  if (com) feats.push({ tag: com.name, ...com.feature });
+
+  return `${errs.length ? `<div class="panel tight no-print"><span class="badge-warn">⚠ This character has ${errs.length} unresolved build issue${errs.length > 1 ? "s" : ""} — <a href="#" onclick="App.goStep(8);return false">review</a>.</span></div>` : ""}
+  <div class="cols">
+  <div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h1 style="margin-bottom:.1em">${esc(c.identity.name || "Unnamed hero")} ${c.identity.pronouns ? `<span class="muted small">(${esc(c.identity.pronouns)})</span>` : ""}</h1>
+          <p class="muted" style="margin-top:0">Level ${c.build.level} ${esc(heritage)} ${com ? esc(com.name) : ""} ${cls ? esc(cls.name) : ""}${sc ? ` — ${esc(sc.name)}` : ""}
+          ${sc && sc.spellcastTrait ? `· Spellcast: ${cap(sc.spellcastTrait)}` : ""}</p>
+          ${c.identity.concept ? `<p class="small muted" style="margin-top:0"><em>${esc(c.identity.concept)}</em></p>` : ""}
+        </div>
+        <div class="row no-print">
+          <label style="margin:0" class="small">Level <input type="number" min="1" max="10" style="width:4em" value="${c.build.level}" onchange="App.set('build.level',this.value)"></label>
+          <button class="small" onclick="window.print()">Print</button>
+          <button class="small" onclick="App.exportChar()">Export</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="statbox"><b>${dv.evasion}</b><span>Evasion</span></div>
+        <div class="statbox"><b>${dv.armorScore}</b><span>Armor score</span></div>
+        <div class="statbox"><b>${dv.major}</b><span>Major ≥</span></div>
+        <div class="statbox"><b>${dv.severe}</b><span>Severe ≥</span></div>
+        <div class="statbox"><b>${dv.proficiency}</b><span>Proficiency</span></div>
+      </div>
+      <div class="traitgrid">
+        ${SRD.meta.traits.map(t => `<div class="statbox"><b>${c.traits[t.id] === null ? "—" : fmtMod(c.traits[t.id])}</b><span>${t.name}</span></div>`).join("")}
+      </div>
+      <hr>
+      <div class="trk"><div class="lbl"><span>Hit points (mark when damaged)</span><span>${c.resources.hpMarked}/${dv.hpSlots}</span></div>${pips("hp", c.resources.hpMarked, dv.hpSlots)}</div>
+      <div class="trk"><div class="lbl"><span>Stress</span><span>${c.resources.stressMarked}/${dv.stressSlots}</span></div>${pips("stress", c.resources.stressMarked, dv.stressSlots)}</div>
+      <div class="trk"><div class="lbl"><span>Hope (max 6)</span><span>${c.resources.hope}/6</span></div>${pips("hope", c.resources.hope, SRD.meta.maxHope)}</div>
+      <div class="trk"><div class="lbl"><span>Armor slots</span><span>${c.resources.armorMarked}/${dv.armorScore}</span></div>${pips("armor", c.resources.armorMarked, dv.armorScore)}</div>
+      <p class="small muted">Damage: below ${dv.major} → mark 1 HP · ${dv.major}–${dv.severe - 1} → mark 2 HP · ${dv.severe}+ → mark 3 HP. Mark an armor slot to reduce HP marked by one.</p>
+      <div class="row no-print">
+        <button class="small" onclick="App.rest('short')">Short rest</button>
+        <button class="small" onclick="App.rest('long')">Long rest</button>
+        <span class="muted small">rest = choose downtime moves; long rest clears trackers here</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Weapons & gear</h3>
+      ${getPrimary(c) ? weaponSheet(c, getPrimary(c), "Primary") : `<p class="muted small">No primary weapon equipped.</p>`}
+      ${getSecondary(c) ? weaponSheet(c, getSecondary(c), "Secondary") : ""}
+      <p class="small"><b>Armor:</b> ${getArmor(c) ? `${esc(getArmor(c).name)} ${getArmor(c).feature ? `— <span class="muted">${esc(getArmor(c).feature)}</span>` : ""}` : "none"}</p>
+      <p class="small"><b>Inventory:</b> ${esc(c.equipment.inventory || "—")}${c.equipment.potion ? ` · ${esc(c.equipment.potion)}` : ""}${c.equipment.classItem ? ` · ${esc(c.equipment.classItem)}` : ""}</p>
+      <div class="row">
+        <div class="trk"><div class="lbl"><span>Gold — handfuls</span></div>${goldPips("handfuls", c.resources.gold.handfuls, 9)}</div>
+        <div class="trk"><div class="lbl"><span>Bags</span></div>${goldPips("bags", c.resources.gold.bags, 9)}</div>
+        <div class="trk"><div class="lbl"><span>Chest</span></div>${goldPips("chest", c.resources.gold.chest, 1)}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Features</h3>
+      ${feats.map(f => `<div class="feat"><b>${esc(f.name)}</b> <span class="chip">${esc(f.tag)}</span><p class="small">${esc(f.text)}</p></div>`).join("") || `<p class="muted small">Choose class & heritage to see features.</p>`}
+    </div>
+
+    <div class="panel">
+      <h3>Domain cards — loadout</h3>
+      ${c.cards.map(id => { const k = byId(SRD.domainCards, id); return k ? cardHtml(k, false, false) : ""; }).join("") || `<p class="muted small">No cards chosen yet.</p>`}
+      <button class="small no-print" onclick="App.goStep(6)">Edit cards</button>
+    </div>
+  </div>
+
+  <div>
+    ${diceRoller(c)}
+    <div class="panel">
+      <h3>Experiences</h3>
+      ${c.experiences.filter(e => e.name.trim()).map(e => `<span class="chip">${esc(e.name)} ${fmtMod(e.mod)}</span>`).join(" ") || `<span class="muted small">none yet</span>`}
+      <p class="small muted" style="margin-top:.5em">Spend a Hope to add an Experience to a relevant roll.</p>
+    </div>
+    <div class="panel">
+      <h3>Notes</h3>
+      <label>Session notes</label>
+      <textarea onchange="App.set('notes.session',this.value)">${esc(c.notes.session)}</textarea>
+      <label style="margin-top:.5em">Character notes</label>
+      <textarea onchange="App.set('notes.public',this.value)">${esc(c.notes.public)}</textarea>
+    </div>
+    <div class="panel no-print">
+      <h3>Advancement adjustments</h3>
+      <p class="small muted">Record level-up advancements here — these adjust your derived stats. (See Reference → Leveling Up.)</p>
+      <div class="grid3">
+        ${[["evasion", "+ Evasion"], ["hpSlots", "+ HP slots"], ["stressSlots", "+ Stress slots"], ["armorScore", "+ Armor score"], ["major", "+ Major thr."], ["severe", "+ Severe thr."], ["proficiency", "+ Proficiency"]].map(([k, lbl]) =>
+      `<div><label>${lbl}</label><input type="number" style="width:100%" value="${c.adjustments[k]}" onchange="App.set('adjustments.${k}',this.value)"></div>`).join("")}
+      </div>
+      <label style="margin-top:.5em">Advancement log</label>
+      <textarea onchange="App.set('adjustments.note',this.value)" placeholder="Level 2: +1 Agility & Instinct, new Experience…">${esc(c.adjustments.note)}</textarea>
+    </div>
+  </div>
+  </div>`;
+}
+function goldPips(kind, val, total) {
+  let out = "";
+  for (let i = 0; i < total; i++) out += `<button class="pip ${i < val ? "on" : ""}" aria-label="gold ${kind} ${i + 1}" onclick="App.gold('${kind}',${i})"></button>`;
+  return `<div class="pips">${out}</div>`;
+}
+function weaponSheet(c, w, kind) {
+  return `<div class="dcard"><div class="top"><b>${esc(w.name)}</b><span class="chip">${kind}</span>
+    <span class="chip">${cap(w.trait)}</span><span class="chip">${w.range}</span><span class="chip">${dmgString(c, w)}</span></div>
+    ${w.feature ? `<p class="small muted">${esc(w.feature)}</p>` : ""}
+    <button class="small no-print" onclick="App.rollDamage('${w.id}','${kind === "Primary" ? "primary" : "secondary"}')">🎲 Roll damage</button></div>`;
+}
+App.rest = function (kind) {
+  const c = App.char;
+  if (kind === "long") {
+    if (!confirm("Long rest: clear all marked HP, Stress, and Armor Slots here?")) return;
+    c.resources.hpMarked = 0; c.resources.stressMarked = 0; c.resources.armorMarked = 0;
+    toast("Long rest — trackers cleared");
+  } else {
+    toast("Short rest — choose downtime moves (clear HP/Stress via the trackers)");
+  }
+  touch();
+};
+
+// ---------- dice ----------
+function diceRoller(c) {
+  const opts = SRD.meta.traits.map(t =>
+    `<option value="${t.id}">${t.name} (${c.traits[t.id] === null ? "+0" : fmtMod(c.traits[t.id])})</option>`).join("");
+  const expOpts = c.experiences.filter(e => e.name.trim()).map((e, i) =>
+    `<option value="${e.mod}">${esc(e.name)} (${fmtMod(e.mod)}) — costs a Hope</option>`).join("");
+  return `<div class="panel no-print">
+    <h3>Duality dice roller</h3>
+    <div class="row">
+      <div><label>Trait</label><select id="rollTrait">${opts}</select></div>
+      <div><label>Adv/Dis</label><select id="rollAdv"><option value="0">—</option><option value="1">Advantage (+d6)</option><option value="-1">Disadvantage (−d6)</option></select></div>
+      <div><label>Modifier</label><input id="rollMod" type="number" value="0" style="width:4.5em"></div>
+      ${expOpts ? `<div><label>Experience</label><select id="rollExp"><option value="0">—</option>${expOpts}</select></div>` : ""}
+    </div>
+    <p style="margin-top:.6em"><button class="primary" onclick="App.rollDuality()">🎲 Roll the Duality Dice</button></p>
+    <div id="diceOut"></div>
+    <div class="log" id="diceLog">${App.diceLog.map(l => `<div>${l}</div>`).join("")}</div>
+  </div>`;
+}
+App.rollDuality = function () {
+  const c = App.char;
+  const trait = $("#rollTrait").value, adv = Number($("#rollAdv").value), mod = Number($("#rollMod").value) || 0;
+  const expSel = $("#rollExp"); const expMod = expSel ? Number(expSel.value) || 0 : 0;
+  const traitMod = c.traits[trait] === null ? 0 : c.traits[trait];
+  const hope = d(12), fear = d(12), advDie = adv !== 0 ? d(6) : 0;
+  let total = hope + fear + traitMod + mod + expMod + (adv > 0 ? advDie : adv < 0 ? -advDie : 0);
+  let verdict, vClass;
+  if (hope === fear) { verdict = "CRITICAL SUCCESS!"; vClass = "crit"; }
+  else if (hope > fear) { verdict = "with Hope"; vClass = "hope"; }
+  else { verdict = "with Fear"; vClass = "fear"; }
+  // apply resource effects
+  let fx = [];
+  if (expMod > 0) { if (c.resources.hope > 0) { c.resources.hope--; fx.push("spent 1 Hope (Experience)"); } }
+  if (hope === fear) { c.resources.hope = clamp(c.resources.hope + 1, 0, 6); c.resources.stressMarked = clamp(c.resources.stressMarked - 1, 0, 99); fx.push("gained 1 Hope, cleared 1 Stress"); }
+  else if (hope > fear) { c.resources.hope = clamp(c.resources.hope + 1, 0, 6); fx.push("gained 1 Hope"); }
+  else fx.push("the GM gains a Fear");
+  const parts = [`Hope d12: ${hope}`, `Fear d12: ${fear}`, `${cap(trait)} ${fmtMod(traitMod)}`];
+  if (expMod) parts.push(`Experience ${fmtMod(expMod)}`);
+  if (mod) parts.push(`mod ${fmtMod(mod)}`);
+  if (adv !== 0) parts.push(`${adv > 0 ? "advantage +" : "disadvantage −"}d6: ${advDie}`);
+  $("#diceOut").innerHTML = `<div class="dice-result">
+    <div class="die hope"><b>${hope}</b><span>Hope</span></div>
+    <div class="die fear"><b>${fear}</b><span>Fear</span></div>
+    <div><div class="roll-verdict ${vClass}"><b>${total}</b> ${verdict}</div>
+    <div class="small muted">${parts.join(" · ")}${fx.length ? " — " + fx.join("; ") : ""}</div></div></div>`;
+  App.diceLog.unshift(`<b>${total}</b> ${verdict} <span class="muted">(${cap(trait)}; H${hope}/F${fear})</span>`);
+  App.diceLog = App.diceLog.slice(0, 20);
+  Store.save();
+  $("#diceLog").innerHTML = App.diceLog.map(l => `<div>${l}</div>`).join("");
+  // update trackers without wiping the roll result
+  const keep = $("#diceOut").innerHTML, keepLog = $("#diceLog").innerHTML;
+  render();
+  if ($("#diceOut")) { $("#diceOut").innerHTML = keep; $("#diceLog").innerHTML = keepLog; }
+};
+App.rollDamage = function (wid, kind) {
+  const c = App.char, w = kind === "primary" ? byId(SRD.primaryWeapons, wid) : byId(SRD.secondaryWeapons, wid);
+  if (!w) return;
+  const dv = derive(c);
+  const m = /^d(\d+)(?:\+(\d+))?$/.exec(w.damage);
+  const sides = Number(m[1]), flat = Number(m[2] || 0);
+  const rolls = []; for (let i = 0; i < dv.proficiency; i++) rolls.push(d(sides));
+  const total = rolls.reduce((a, b) => a + b, 0) + flat;
+  toast(`${w.name}: ${total} ${w.type === "mag" ? "magic" : "physical"} damage (${rolls.join("+")}${flat ? "+" + flat : ""})`);
+  App.diceLog.unshift(`<b>${total}</b> damage — ${esc(w.name)} <span class="muted">(${rolls.join("+")}${flat ? "+" + flat : ""})</span>`);
+  Store.save();
+  if ($("#diceLog")) $("#diceLog").innerHTML = App.diceLog.map(l => `<div>${l}</div>`).join("");
+};
+
+// ---------- reference ----------
+function viewReference() {
+  return `<div class="cols"><div>
+    <div class="panel"><h2>Quick rules reference</h2>
+      ${SRD.rulesReference.map(r => `<div class="feat"><b>${esc(r.name)}</b><p class="small">${esc(r.text)}</p></div>`).join("")}
+      <p class="small muted">Paraphrased for quick table use — the <a href="https://www.daggerheart.com/srd/" target="_blank" rel="noopener">official SRD</a> is the authority.</p>
+    </div>
+    <div class="panel"><h2>Leveling up</h2>
+      <p class="small">You level up at narrative milestones (about every 3 sessions). Tiers: ${SRD.leveling.tiers.map(t => t.label).join(" · ")}</p>
+      <h4>Each level-up:</h4>
+      <ol class="small">${SRD.leveling.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+      <h4>Advancement options (choose two)</h4>
+      <ul class="small">${SRD.leveling.advancementOptions.map(o => `<li>${esc(o)}</li>`).join("")}</ul>
+      <h4>Tier achievements</h4>
+      <ul class="small">${Object.entries(SRD.leveling.tierAchievements).map(([lv, t]) => `<li><b>Level ${lv}:</b> ${esc(t)}</li>`).join("")}</ul>
+      <p class="small muted">Record your choices in the Sheet tab under “Advancement adjustments.”</p>
+    </div>
+  </div><div>
+    <div class="panel"><h2>The nine domains</h2>
+      ${SRD.domains.map(dm => `<p class="small"><b>${dm.name}.</b> <span class="muted">${esc(dm.blurb)}</span></p>`).join("")}
+    </div>
+    <div class="panel"><h2>About Heartforge</h2>
+      <p class="small">Heartforge is a free, open, single-file character builder compatible with <b>Daggerheart™</b>, built for learning purposes. It is an independent fan work — not published, endorsed, or approved by Darrington Press or Critical Role.</p>
+      <p class="small">It includes materials from the <em>Daggerheart System Reference Document 1.0</em>, © Critical Role, LLC, used under the <a href="https://darringtonpress.com/license/" target="_blank" rel="noopener">Darrington Press Community Gaming License</a>. Daggerheart and all related marks are trademarks of Critical Role, LLC.</p>
+      <p class="small">Your characters live only in this browser's localStorage. Export JSON backups from the Characters tab. No accounts, analytics, or servers.</p>
+      <p class="small">Get the full game: <a href="https://www.daggerheart.com" target="_blank" rel="noopener">daggerheart.com</a> · <a href="https://www.daggerheart.com/downloads/" target="_blank" rel="noopener">official free downloads</a></p>
+    </div>
+  </div></div>`;
+}
+
+// ---------- character management ----------
+function viewChars() {
+  const rows = Store.data.order.map(id => {
+    const ch = Store.data.characters[id];
+    const cls = byId(SRD.classes, ch.build.classId);
+    return `<tr>
+      <td><b>${esc(ch.identity.name || "Unnamed hero")}</b>${id === Store.data.currentId ? ' <span class="chip acc">current</span>' : ""}</td>
+      <td class="small muted">Lv ${ch.build.level} ${cls ? cls.name : "—"}</td>
+      <td class="small muted">${new Date(ch.updatedAt).toLocaleDateString()}</td>
+      <td class="row">
+        <button class="small" onclick="App.select('${id}')">Open</button>
+        <button class="small" onclick="App.renameChar('${id}')">Rename</button>
+        <button class="small" onclick="App.dupeChar('${id}')">Duplicate</button>
+        <button class="small" onclick="App.exportChar('${id}')">Export</button>
+        <button class="small danger" onclick="App.deleteChar('${id}')">Delete</button>
+      </td></tr>`;
+  }).join("");
+  return `<div class="panel"><h2>Your characters</h2>
+    <p class="small muted">Stored only in this browser. Export backups — clearing browser data erases them.</p>
+    <div class="tablewrap"><table><tr><th>Name</th><th>Build</th><th>Updated</th><th>Actions</th></tr>${rows || `<tr><td colspan="4" class="muted">none yet</td></tr>`}</table></div>
+    <div class="row" style="margin-top:.8em">
+      <button class="primary" onclick="App.newChar()">+ New character</button>
+      <button onclick="App.importChar()">Import JSON</button>
+      <button onclick="App.exportAll()">Export all (backup)</button>
+    </div></div>`;
+}
+App.select = id => { Store.data.currentId = id; Store.save(); App.tab = "sheet"; render(); };
+App.newChar = function () {
+  const ch = newCharacter("");
+  Store.data.characters[ch.id] = ch; Store.data.order.push(ch.id); Store.data.currentId = ch.id;
+  App.tab = "build"; App.step = 0; Store.save(); render();
+};
+App.renameChar = function (id) {
+  const ch = Store.data.characters[id]; if (!ch) return;
+  const name = prompt("Character name:", ch.identity.name);
+  if (name !== null) { ch.identity.name = name.trim(); touch(); }
+};
+App.dupeChar = function (id) {
+  const src = Store.data.characters[id]; if (!src) return;
+  const copy = sanitizeCharacter(JSON.parse(JSON.stringify(src)));
+  copy.id = uid(); copy.identity.name = (copy.identity.name || "Unnamed") + " (copy)";
+  copy.createdAt = copy.updatedAt = new Date().toISOString();
+  Store.data.characters[copy.id] = copy; Store.data.order.push(copy.id);
+  Store.save(); render(); toast("Duplicated");
+};
+App.deleteChar = function (id) {
+  const ch = Store.data.characters[id]; if (!ch) return;
+  if (!confirm(`Delete “${ch.identity.name || "Unnamed hero"}” permanently? Export a backup first if unsure.`)) return;
+  delete Store.data.characters[id];
+  Store.data.order = Store.data.order.filter(x => x !== id);
+  if (Store.data.currentId === id) Store.data.currentId = Store.data.order[0] || null;
+  Store.save(); render();
+};
+function download(filename, text) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+}
+App.exportChar = function (id) {
+  const ch = Store.data.characters[id || Store.data.currentId]; if (!ch) return;
+  download(`${(ch.identity.name || "character").replace(/[^\w-]+/g, "_")}.heartforge.json`, JSON.stringify(ch, null, 2));
+};
+App.exportAll = function () {
+  download(`heartforge-backup-${new Date().toISOString().slice(0, 10)}.json`,
+    JSON.stringify({ app: "heartforge", kind: "backup", exportedAt: new Date().toISOString(), characters: Store.data.order.map(id => Store.data.characters[id]) }, null, 2));
+};
+App.importChar = function () {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json,application/json";
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { toast("File too large"); return; }
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const parsed = JSON.parse(rd.result);
+        const list = parsed && parsed.kind === "backup" && Array.isArray(parsed.characters) ? parsed.characters : [parsed];
+        let n = 0;
+        for (const raw of list) {
+          const ch = sanitizeCharacter(raw);
+          if (Store.data.characters[ch.id]) ch.id = uid();
+          Store.data.characters[ch.id] = ch; Store.data.order.push(ch.id); Store.data.currentId = ch.id; n++;
+        }
+        Store.save(); render(); toast(`Imported ${n} character${n > 1 ? "s" : ""}`);
+      } catch (e) { toast("Import failed: " + e.message); }
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+};
+
+// ---------- boot ----------
+function initTheme() {
+  const saved = Store.data.settings.theme;
+  if (saved) document.documentElement.dataset.theme = saved;
+  $("#btnTheme").onclick = () => {
+    const cur = document.documentElement.dataset.theme ||
+      (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    const next = cur === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    Store.data.settings.theme = next; Store.save();
+  };
+  if (!saved && matchMedia("(prefers-color-scheme: light)").matches) document.documentElement.dataset.theme = "light";
+}
+function init() {
+  Store.load();
+  initTheme();
+  $("#charSelect").onchange = e => { if (e.target.value) App.select(e.target.value); };
+  $("#btnNewChar").onclick = () => App.newChar();
+  if (!Store.data.currentId && Store.data.order.length) Store.data.currentId = Store.data.order[0];
+  render();
+}
+init();
+
+</script>
+</body>
+</html>
